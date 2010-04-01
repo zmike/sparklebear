@@ -120,7 +120,6 @@ static void
 zinfo_to_zmain(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
-	int zwidth = 800, zheight = 600;
 	
 	ecore_timer_del(zwin->timerget);
 	create_zmain_vm(zwin);
@@ -134,9 +133,6 @@ zinfo_to_zmain(void *data, Evas_Object *obj, void *event_info)
 	evas_object_hide(zwin->zinfo->frame);
 	evas_object_hide(zwin->zinfo->hbox);
 	evas_object_del(zwin->zinfo->hbox);
-
-	evas_object_resize(zwin->win, zwidth, zheight);
-	evas_object_move(zwin->win, (zwin->xres/2)-(zwidth/2), (zwin->yres/2)-(zheight/2));
 }
 
 static void
