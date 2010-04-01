@@ -5,6 +5,8 @@
  * Mike Blumenkrantz 2010
  */
 
+#define HOST "10.10.10.6"
+
 #include "main.h"
 
 //begin vm_actions.c
@@ -74,7 +76,7 @@ elm_main(int argc, char **argv)
 	int zwidth = 396, zheight = 390;
 	zwin.vmtimer = 30;
 	zwin.usertimer = 30;
-	zcon.host = "10.10.10.6";
+	zcon.host = HOST;
 	zcon.port = 65534;
 
 
