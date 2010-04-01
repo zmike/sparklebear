@@ -4,7 +4,7 @@
 #include "zrpc.h"
 
 /*adds some noise*/
-//#define DEBUG 1
+#define DEBUG 1
 /*this one makes this VERY noisy*/
 //#define EDEBUG 1
 /*this one prints the calls/receives*/
@@ -35,6 +35,8 @@ static int zinfo_job_updatevm(void *data);
 static void zinfo_destroy_hover(void *data, Evas_Object *obj, void *event_info);
 static void zmain_to_zlogin(void *data, Evas_Object *obj, void *event_info);
 static void zinfo_to_zlogin(void *data, Evas_Object *obj, void *event_info);
+void zinfo_job_updateuser(void *data, Evas_Object *obj, void *event_info);
+void create_zinfo_user(void *data);
 
 typedef struct _vmitem
 {
@@ -140,7 +142,7 @@ typedef struct _zinfo
 {
 	Evas_Object *frame,
 		*hbox, *sp,
-		*hover, *ic, *hb,
+		*hover, *ic, *hb, *lb, *pass, *email, *level, *level_icon,
 		*vbox1, *back, *bi,
 		*os_icon, *id, *os, *name, *uuid, *puuid, *disks,
 		*vbox2,
@@ -148,8 +150,9 @@ typedef struct _zinfo
 		*vbox3, *vbox4,
 		*kernel, *ramdisk, *cmdline,
 			*notesframe, *notes, *notesend;
+	Ecore_Timer *update;
 	char *vmuuid, *state;
-	int uid;
+	int uid, newuid, ulevel;
 } zinfo;
 
 typedef struct _zwin
@@ -157,7 +160,7 @@ typedef struct _zwin
 	zlogin *zlogin;
 	zmain *zmain, *zmain_user;
 	zinfo *zinfo;
-	Evas_Object *fl, *win, *box, *bg;
+	Evas_Object *fl, *win, *box, *bg, *rect;
 	Eina_List *list, /*zrpc_$type *list*/
 		*elist; /*$typeitem *list*/
 	Ecore_Timer *timerget;
@@ -253,4 +256,26 @@ char *get_access_icon(int level)
 
 	ret = strdup(buf);
 	return ret;
-}	
+}
+
+char *get_access_name(int level)
+{
+	char buf[PATH_MAX], *ret;
+
+	if (level == 0)/*SuperUser*/
+		sprintf(buf, "SuperUser");
+	else if (level == 1)/*Maintenance*/
+		sprintf(buf, "Maintenance");
+	else if (level == 2)/*Owner*/
+		sprintf(buf, "Owner");
+	else if (level == 3)/*Admin*/
+		sprintf(buf, "Admin");
+	else if (level == 4)/*R/O Admin*/
+		sprintf(buf, "Read-Only Admin");
+	else if (level == 5)/*none*/
+		sprintf(buf, "NONE");
+
+	ret = strdup(buf);
+	return ret;
+
+}

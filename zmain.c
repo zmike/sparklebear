@@ -181,9 +181,12 @@ zmain_vm_keybind(void *data, Evas_Event_Key_Down *key)
 			elm_genlist_item_bring_in(gi);
 		}
 		else if (streq(key->keyname, "Return") || streq(key->keyname, "KP_Enter"))
+		{
 			if (streq(zwin->view, "main_vm"))
 				vm_info_cb(zwin, NULL, NULL);
-
+			else if (streq(zwin->view, "main_user"))
+				user_info_cb(zwin, NULL, NULL);
+		}
 }
 
 static void zmain_vm_view(void *data, Evas_Object *obj, void *event_info)
@@ -326,23 +329,19 @@ static void create_zmain_user(void *data)
 	evas_object_show(zmain->bar);
 
 	zmain->icon = elm_icon_add(zwin->win);
-	elm_icon_file_set(zmain->icon, "images/kfind.png", NULL);
-	elm_toolbar_item_add(zmain->bar, zmain->icon, "Info", NULL, zwin);
-
-	zmain->icon = elm_icon_add(zwin->win);
 	elm_icon_file_set(zmain->icon, "images/add_user.png", NULL);
 	elm_toolbar_item_add(zmain->bar, zmain->icon, "Add", NULL, zwin);
 
 	zmain->icon = elm_icon_add(zwin->win);
 	elm_icon_file_set(zmain->icon, "images/edit_user.png", NULL);
-	zmain->tbitem = elm_toolbar_item_add(zmain->bar, zmain->icon, "Edit", NULL, zwin);
+	zmain->tbitem = elm_toolbar_item_add(zmain->bar, zmain->icon, "Edit", user_info_cb, zwin);
 	
 	zmain->icon = elm_icon_add(zwin->win);
 	elm_icon_file_set(zmain->icon, "images/delete_user.png", NULL);
 	elm_toolbar_item_add(zmain->bar, zmain->icon, "Remove", user_remove_cb, zwin);
 
 	zmain->list = elm_genlist_add(zwin->win);
-//	evas_object_smart_callback_add(zmain->list, "clicked", info_cb, zwin);
+	evas_object_smart_callback_add(zmain->list, "clicked", user_info_cb, zwin);
 	evas_object_size_hint_weight_set(zmain->list, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(zmain->list, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	elm_box_pack_end(zmain->box2, zmain->list);

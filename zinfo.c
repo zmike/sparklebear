@@ -70,7 +70,149 @@ zinfo_updatevm(void *data, zrpc_handle h)
 	free(state);
 }
 
-static void
+int
+zinfo_job_updatevm(void *data)
+{
+	zwin *zwin = data;	
+
+	if (!zrpc_VM_getVM(zwin->zinfo->vmuuid, zwin->zcon, &zinfo_updatevm, zwin))
+	{
+		elm_label_label_set(zwin->zmain->status, "Connection failed");
+		evas_object_show(zwin->zmain->notify);
+	}
+
+	return ECORE_CALLBACK_RENEW;
+}
+
+zrpc_user*
+zinfo_user_findbyuid(void *data)
+{
+	zwin *zwin = data;
+	Eina_List *l;
+	zrpc_user *user;
+	
+
+	EINA_LIST_FOREACH(zwin->list, l, user)
+		if (user->uid == zwin->zinfo->uid)
+			return user;
+		
+	EINA_LIST_FOREACH(zwin->list, l, user)
+		if (user->uid == zwin->zinfo->newuid)
+		{
+			zwin->zinfo->uid = zwin->zinfo->newuid;
+			zwin->zinfo->newuid = -1;
+			return user;
+		}
+
+	return NULL;
+}
+
+void
+zinfo_job_updateuser_level(void *data, Evas_Object *obj, void *event_info)
+{
+	zwin *zwin = data;
+	char *tmp, buf[128];
+	int x;
+	
+	x = (int)elm_slider_value_get(zwin->zinfo->level);
+
+	if (x == zwin->zinfo->ulevel) return;
+
+	zwin->zinfo->ulevel = x;
+
+	tmp = get_access_icon(x);
+	elm_icon_file_set(zwin->zinfo->level_icon, tmp, NULL);
+	free(tmp);
+
+	tmp = get_access_name(x);
+#ifdef DEBUG
+printf("DEBUG: setting level to %s\n", tmp);
+#endif
+	sprintf(buf, "Access level: %s", tmp);
+	elm_label_label_set(zwin->zinfo->lb, buf);
+
+	free(tmp);
+}
+
+
+void
+zinfo_job_updateuser_state(void *data, Evas_Object *obj, void *event_info)
+{
+	zwin *zwin = data;
+	Eina_Bool x;
+
+	x = elm_toggle_state_get(zwin->zinfo->state_label);
+
+#ifdef DEBUG
+printf("DEBUG: setting user to %s state\n", (x) ? "active" : "inactive");
+#endif
+
+	if (x)
+	{
+		elm_toggle_label_set(zwin->zinfo->state_label, "Active");
+		elm_icon_file_set(zwin->zinfo->state_icon, "images/dialog_ok.png", NULL);
+	}
+	else
+	{
+		elm_toggle_label_set(zwin->zinfo->state_label, "Inctive");
+		elm_icon_file_set(zwin->zinfo->state_icon, "images/dialog_close.png", NULL);
+	}
+}
+
+void
+zinfo_job_updateuser(void *data, Evas_Object *obj, void *event_info)
+{
+	zwin *zwin = data;
+	zrpc_user *user;
+	zinfo *zinfo = zwin->zinfo;
+	char *tmp, buf[128];
+
+
+	if (!(user = zinfo_user_findbyuid(zwin)))
+	{
+		elm_label_label_set(zwin->zmain->status, "Invalid UID!");
+		evas_object_show(zwin->zmain->notify);
+		zinfo_destroy_hover(zwin, NULL, NULL);
+		return;
+	}
+
+	tmp = get_access_name(user->type);
+#ifdef DEBUG
+printf("DEBUG: setting access type to %s\n", tmp);
+#endif
+	sprintf(buf, "Access level: %s", tmp);
+	elm_label_label_set(zinfo->lb, buf);
+	free(tmp);
+
+	tmp = get_access_icon(user->type);
+#ifdef DEBUG
+printf("DEBUG: setting access icon to %s\n", tmp);
+#endif
+	elm_icon_file_set(zinfo->level_icon, tmp, NULL);
+	free(tmp);
+
+#ifdef DEBUG
+printf("DEBUG: user is %s\n", (user->active) ? "active" : "inactive");
+#endif
+	if (user->active)
+		elm_icon_file_set(zwin->zinfo->state_icon, "images/dialog_ok.png", NULL);
+	else
+		elm_icon_file_set(zwin->zinfo->state_icon, "images/dialog_close.png", NULL);
+	elm_toggle_state_set(zinfo->state_label, user->active);
+#ifdef DEBUG
+printf("DEBUG: access type is %d\n", user->type);
+#endif
+	elm_slider_value_set(zinfo->level, user->type);
+
+	tmp = itoa(user->uid);
+	elm_scrolled_entry_entry_set(zinfo->id, tmp);
+	free(tmp);
+
+	elm_scrolled_entry_entry_set(zinfo->name, user->name);
+	elm_scrolled_entry_entry_set(zinfo->email, user->email);
+}
+
+void
 zinfo_to_zlogin(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
@@ -102,52 +244,63 @@ zinfo_to_zlogin(void *data, Evas_Object *obj, void *event_info)
 	zwin->zinfo->state = NULL;
 }
 
-static int
-zinfo_job_updatevm(void *data)
-{
-	zwin *zwin = data;	
-
-	if (!zrpc_VM_getVM(zwin->zinfo->vmuuid, zwin->zcon, &zinfo_updatevm, zwin))
-	{
-		elm_label_label_set(zwin->zmain->status, "Connection failed");
-		evas_object_show(zwin->zmain->notify);
-	}
-
-	return ECORE_CALLBACK_RENEW;
-}
-
-static void
+void
 zinfo_to_zmain(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
+	int x;
 	
 	ecore_timer_del(zwin->timerget);
 	create_zmain_vm(zwin);
 
 	zwin->timerget = ecore_timer_add(zwin->vmtimer, zmain_job_getvms, zwin);
 	ecore_job_add((void*)zmain_job_getvms, zwin);
-	
 	elm_flip_content_front_set(zwin->zmain->fl, zwin->zmain->box2);
 	elm_flip_go(zwin->zmain->fl, ELM_FLIP_ROTATE_X_CENTER_AXIS);
 	sprintf(zwin->view, "main_vm");
+	x = evas_object_key_grab(zwin->win, "Up", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Down", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Left", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Right", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Home", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "End", 0, 0, 1);
 	evas_object_hide(zwin->zinfo->frame);
 	evas_object_hide(zwin->zinfo->hbox);
 	evas_object_del(zwin->zinfo->hbox);
 }
 
-static void
+void
 zinfo_destroy_hover(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
 	zinfo *zinfo = zwin->zinfo;
+	int x;
 
+	evas_object_hide(zinfo->vbox1);
+	evas_object_del(zinfo->vbox1);
 	evas_object_hide(zinfo->hover);
 	evas_object_del(zinfo->hover);
 
-	sprintf(zwin->view, "info_vm");
+	if (streq(zwin->view, "info_hover_vm"))
+		sprintf(zwin->view, "info_vm");
+	else if (streq(zwin->view, "info_hover_user"))
+	{
+		evas_object_hide(zinfo->lb);
+		evas_object_del(zinfo->lb);
+		zinfo->uid = -1;
+		zinfo->newuid = -1;
+		sprintf(zwin->view, "main_user");
+	}
+
+	x = evas_object_key_grab(zwin->win, "Up", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Down", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Left", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Right", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "Home", 0, 0, 1);
+	x = evas_object_key_grab(zwin->win, "End", 0, 0, 1);
 }
 
-static void
+void
 zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
@@ -281,12 +434,12 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 	elm_hover_content_set(zinfo->hover, "bottom", zinfo->hb);
 	evas_object_show(zinfo->hb);
 
-	sprintf(zwin->view, "info_hover");
+	sprintf(zwin->view, "info_hover_vm");
 	evas_object_show(zinfo->hover);	
 
 }
 
-static void
+void
 zinfo_vm_keybind(void *data, Evas_Event_Key_Down *key)
 {
 	zwin *zwin = data;
@@ -294,13 +447,13 @@ zinfo_vm_keybind(void *data, Evas_Event_Key_Down *key)
 	if (streq(zwin->view, "info_vm"))
 		if (streq(key->keyname, "Escape"))
 			zinfo_to_zmain(zwin, NULL, NULL);
-	if (streq(zwin->view, "info_hover"))
+	if (streq(zwin->view, "info_hover_vm") || streq(zwin->view, "info_hover_user"))
 		if (streq(key->keyname, "Escape"))
 			zinfo_destroy_hover(zwin, NULL, NULL);
 
 }
 
-static void
+void
 create_zinfo_vm(void *data)
 {
 	zwin *zwin = data;
@@ -511,4 +664,204 @@ create_zinfo_vm(void *data)
 	evas_object_size_hint_align_set(zinfo->notesend, 1.0, 1.0);
 	elm_box_pack_end(zinfo->vbox4, zinfo->notesend);
 	evas_object_show(zinfo->notesend);
+}
+
+void
+create_zinfo_user(void *data)
+{
+	zwin *zwin = data;
+	zinfo *zinfo = zwin->zinfo;
+	Eina_List *gl_l;
+	int count;
+
+	gl_l = elm_genlist_realized_items_get(zwin->zmain_user->list);
+	count = eina_list_count(gl_l);
+
+	zinfo->hover = elm_hover_add(zwin->win);
+	elm_object_style_set(zinfo->hover, "popout");
+	elm_hover_parent_set(zinfo->hover, zwin->win);
+	elm_hover_target_set(zinfo->hover, zwin->zmain_user->list);
+	evas_object_smart_callback_add(zinfo->hover, "clicked", zinfo_destroy_hover, zwin);
+
+
+//hbox
+	zinfo->hbox = elm_box_add(zwin->win);
+	elm_object_scale_set(zinfo->hbox, 1.5);
+	elm_box_horizontal_set(zinfo->hbox, 1);
+
+	zinfo->lb = elm_label_add(zwin->win);
+	elm_box_pack_end(zinfo->hbox, zinfo->lb);
+	evas_object_show(zinfo->lb);
+	elm_hover_content_set(zinfo->hover, "top", zinfo->hbox);
+	evas_object_show(zinfo->hbox);
+//hbox
+
+
+//vbox2
+	zinfo->vbox2 = elm_box_add(zwin->win);
+	elm_box_horizontal_set(zinfo->vbox2, 1);
+	elm_box_homogenous_set(zinfo->vbox2, 1);
+
+	zinfo->state_icon = elm_icon_add(zwin->win);
+	elm_object_scale_set(zinfo->state_icon, 0.5);
+	elm_icon_scale_set(zinfo->state_icon, 0, 1);
+	elm_icon_smooth_set(zinfo->state_icon, 1);
+	evas_object_show(zinfo->state_icon);
+	zinfo->state_label = elm_toggle_add(zwin->win);
+	evas_object_size_hint_expand_set(zinfo->state_label, 0, 0);
+	evas_object_size_hint_fill_set(zinfo->state_label, 0, 0.5);
+	elm_toggle_icon_set(zinfo->state_label, zinfo->state_icon);
+	elm_toggle_label_set(zinfo->state_label, "Active");
+	elm_toggle_states_labels_set(zinfo->state_label, "Yes", "No");
+	elm_object_scale_set(zinfo->state_label, 1.7);
+	evas_object_smart_callback_add(zinfo->state_label, "changed", zinfo_job_updateuser_state, zwin);
+	elm_box_pack_end(zinfo->vbox2, zinfo->state_label);
+	evas_object_show(zinfo->state_label);
+
+
+//vbox1
+	zinfo->vbox1 = elm_box_add(zwin->win);
+
+	zinfo->level_icon = elm_icon_add(zwin->win);
+	elm_icon_scale_set(zinfo->level_icon, 0, 0);
+	elm_icon_smooth_set(zinfo->level_icon, 1);
+	elm_box_pack_end(zinfo->vbox1, zinfo->level_icon);
+	evas_object_show(zinfo->level_icon);
+
+
+	zinfo->frame = elm_frame_add(zwin->win);
+	evas_object_size_hint_expand_set(zinfo->frame, 1, 0);
+	evas_object_size_hint_fill_set(zinfo->frame, -1, -1);
+	elm_frame_label_set(zinfo->frame, "UID");
+	elm_object_scale_set(zinfo->frame, 1.5);
+	zinfo->id = elm_scrolled_entry_add(zwin->win);
+	elm_scrolled_entry_scrollbar_policy_set(zinfo->id, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+	elm_scrolled_entry_single_line_set(zinfo->id, 1);
+	evas_object_show(zinfo->id);
+
+	elm_frame_content_set(zinfo->frame, zinfo->id);
+	elm_box_pack_end(zinfo->vbox1, zinfo->frame);
+	evas_object_show(zinfo->frame);
+
+	zinfo->frame = elm_frame_add(zwin->win);
+	elm_object_scale_set(zinfo->frame, 1.5);
+	evas_object_size_hint_expand_set(zinfo->frame, 1, 0);
+	evas_object_size_hint_fill_set(zinfo->frame, -1, -1);
+	elm_frame_label_set(zinfo->frame, "Name");
+
+	zinfo->name = elm_scrolled_entry_add(zwin->win);
+	elm_scrolled_entry_scrollbar_policy_set(zinfo->name, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+	elm_scrolled_entry_single_line_set(zinfo->name, 1);
+	evas_object_show(zinfo->name);
+
+	elm_frame_content_set(zinfo->frame, zinfo->name);
+	evas_object_show(zinfo->frame);
+	elm_box_pack_end(zinfo->vbox1, zinfo->frame);
+
+
+//hbox
+	zinfo->hbox = elm_box_add(zwin->win);
+	elm_box_horizontal_set(zinfo->hbox, 1);
+
+	zinfo->frame = elm_frame_add(zwin->win);
+	elm_object_scale_set(zinfo->frame, 1.5);
+	evas_object_size_hint_expand_set(zinfo->frame, 1, 0);
+	evas_object_size_hint_fill_set(zinfo->frame, -1, -1);
+	elm_frame_label_set(zinfo->frame, "Password");
+
+	zinfo->pass = elm_scrolled_entry_add(zwin->win);
+	elm_scrolled_entry_password_set(zinfo->pass, 1);
+	elm_scrolled_entry_entry_set(zinfo->pass, "password");
+	elm_scrolled_entry_select_all(zinfo->pass);
+	elm_scrolled_entry_scrollbar_policy_set(zinfo->pass, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+	elm_scrolled_entry_single_line_set(zinfo->pass, 1);
+	evas_object_show(zinfo->pass);
+
+	elm_frame_content_set(zinfo->frame, zinfo->pass);
+	elm_box_pack_end(zinfo->hbox, zinfo->frame);
+	evas_object_show(zinfo->frame);	
+
+	elm_box_pack_end(zinfo->vbox1, zinfo->hbox);
+	evas_object_show(zinfo->hbox);
+//hbox
+
+	zinfo->frame = elm_frame_add(zwin->win);
+	evas_object_size_hint_expand_set(zinfo->frame, 1, 0);
+	evas_object_size_hint_fill_set(zinfo->frame, -1, -1);
+	elm_object_scale_set(zinfo->frame, 1.5);
+	elm_frame_label_set(zinfo->frame, "Email");
+	zinfo->email = elm_scrolled_entry_add(zwin->win);
+	elm_scrolled_entry_scrollbar_policy_set(zinfo->email, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_OFF);
+	elm_scrolled_entry_single_line_set(zinfo->email, 1);
+	evas_object_show(zinfo->email);
+	elm_frame_content_set(zinfo->frame, zinfo->email);
+	elm_box_pack_end(zinfo->vbox1, zinfo->frame);
+	evas_object_show(zinfo->email);
+	evas_object_show(zinfo->frame);
+
+	elm_box_pack_end(zinfo->vbox2, zinfo->vbox1);
+	evas_object_show(zinfo->vbox1);
+//vbox1
+
+	zinfo->level = elm_slider_add(zwin->win);
+	elm_slider_horizontal_set(zinfo->level, 0);
+	elm_slider_label_set(zinfo->level, "Access Level");
+	elm_slider_min_max_set(zinfo->level, USER_LEVEL_MIN, USER_LEVEL_MAX);
+	elm_slider_indicator_format_set(zinfo->level, "%1.0f");
+	elm_object_scale_set(zinfo->level, 3);
+	evas_object_smart_callback_add(zinfo->level, "changed", zinfo_job_updateuser_level, zwin);
+	elm_box_pack_end(zinfo->vbox2, zinfo->level);
+	evas_object_show(zinfo->level);
+
+	elm_hover_content_set(zinfo->hover, "middle", zinfo->vbox2);
+	evas_object_show(zinfo->vbox2);
+//vbox2
+
+
+	zinfo->hbox = elm_box_add(zwin->win);
+	elm_box_homogenous_set(zinfo->hbox, 1);
+	elm_box_horizontal_set(zinfo->hbox, 1);
+	elm_hover_content_set(zinfo->hover, "bottom", zinfo->hbox);
+
+	zinfo->ic = elm_icon_add(zwin->win);
+	elm_icon_file_set(zinfo->ic, "images/reload.png", NULL);
+	evas_object_show(zinfo->ic);
+
+	zinfo->hb = elm_button_add(zwin->win);
+	elm_button_icon_set(zinfo->hb, zinfo->ic);
+	elm_button_label_set(zinfo->hb, "Refresh");
+	elm_object_style_set(zinfo->hb, "anchor");
+	evas_object_smart_callback_add(zinfo->hb, "clicked", zinfo_job_updateuser, zwin);
+	elm_box_pack_end(zinfo->hbox, zinfo->hb);
+	evas_object_show(zinfo->hb);
+
+	zinfo->ic = elm_icon_add(zwin->win);
+	elm_icon_file_set(zinfo->ic, "images/button_cancel.png", NULL);
+	evas_object_show(zinfo->ic);
+
+	zinfo->hb = elm_button_add(zwin->win);
+	elm_button_icon_set(zinfo->hb, zinfo->ic);
+	elm_button_label_set(zinfo->hb, "Cancel");
+	elm_object_style_set(zinfo->hb, "anchor");
+	evas_object_smart_callback_add(zinfo->hb, "clicked", zinfo_destroy_hover, zwin);
+	elm_box_pack_end(zinfo->hbox, zinfo->hb);
+	evas_object_show(zinfo->hb);
+
+	zinfo->ic = elm_icon_add(zwin->win);
+	elm_icon_file_set(zinfo->ic, "images/button_ok.png", NULL);
+	evas_object_show(zinfo->ic);
+
+	zinfo->hb = elm_button_add(zwin->win);
+	elm_button_icon_set(zinfo->hb, zinfo->ic);
+	elm_button_label_set(zinfo->hb, "Apply");
+	elm_object_style_set(zinfo->hb, "anchor");
+	evas_object_smart_callback_add(zinfo->hb, "clicked", user_edit_cb, zwin);
+	elm_box_pack_end(zinfo->hbox, zinfo->hb);
+	evas_object_show(zinfo->hb);
+
+	evas_object_show(zinfo->hbox);
+
+	sprintf(zwin->view, "info_hover_user");
+	evas_object_show(zinfo->hover);	
+
 }

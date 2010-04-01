@@ -5,7 +5,8 @@
  * Mike Blumenkrantz 2010
  */
 
-#define HOST "10.10.10.6"
+#define HOST	"10.10.10.6"
+#define PORT	65534
 
 #include "main.h"
 
@@ -77,7 +78,7 @@ elm_main(int argc, char **argv)
 	zwin.vmtimer = 30;
 	zwin.usertimer = 30;
 	zcon.host = HOST;
-	zcon.port = 65534;
+	zcon.port = PORT;
 
 
 	

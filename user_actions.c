@@ -77,6 +77,11 @@ user_remove_cb(void *data, Evas_Object *obj, void *event_info)
 }
 
 void
+user_edit_cb(void *data, Evas_Object *obj, void *event_info)
+{
+}
+
+void
 user_info_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
@@ -84,67 +89,22 @@ user_info_cb(void *data, Evas_Object *obj, void *event_info)
 	zmain *zmain = zwin->zmain_user;
 	Elm_Genlist_Item *gl;
 	useritem *item;
-	zrpc_user *user;
-	char tmp[PATH_MAX];
-	Eina_List *l = NULL;
 
 	elm_toolbar_item_unselect_all(zmain->bar);
 	gl = elm_genlist_selected_item_get(zmain->list);
 	if (!gl) return;
-/*
-	ecore_timer_del(zwin->timerget);
 
-	item = (useritem*)elm_genlist_item_data_get(gl);
-	user = item->user;
-	zinfo->uid = user->uid;
-	evas_object_smart_callback_del(zwin->zmain_user->list, "clicked", vm_info_cb);
+	if (!(item = (useritem*)elm_genlist_item_data_get(gl))) return;
+	zinfo->uid = item->user->uid;
+	zinfo->ulevel = item->user->type;
 
 	create_zinfo_user(zwin);
-	zinfo_job_updateuser(zwin);
-
-	snprintf(tmp, sizeof(tmp), "%d:%s", user->uid, user->name);
-	elm_frame_label_set(zinfo->frame, tmp);
-
-	elm_icon_file_set(zinfo->os_icon, os_icon, NULL);
-	free(os_icon);
-	elm_label_label_set(zinfo->os, vm->os);
-	elm_label_label_set (zinfo->uuid, vm->uuid);
-	elm_label_label_set(zinfo->puuid, vm->puuid);
-	EINA_LIST_FOREACH(vm->disks, l, d)
-		elm_hoversel_item_add(zinfo->disks, d->ext_dev, NULL, ELM_ICON_NONE, NULL, d);
-		
-	state = get_state_icon(vm->state);
-	elm_icon_file_set(zinfo->state_icon, state, NULL);
-	free(state);
-
-	EINA_LIST_FOREACH(vm->vifs, l, v)
-		elm_hoversel_item_add(zinfo->vifs, v->name, NULL, ELM_ICON_NONE, NULL, v);
-
-
-	sprintf(tmp, "Kernel: %s", vm->kernel);
-	elm_label_label_set(zinfo->kernel, tmp);
-	sprintf(tmp, "Ramdisk: %s", vm->ramdisk);
-	elm_label_label_set(zinfo->ramdisk, tmp);
-	sprintf(tmp, "Kernel args: %s", vm->cmdline);
-	elm_label_label_set(zinfo->cmdline, tmp);
+	zinfo_job_updateuser(zwin, NULL, NULL);
 
 	evas_object_key_ungrab(zwin->win, "Up", 0, 0);
 	evas_object_key_ungrab(zwin->win, "Down", 0, 0);
+	evas_object_key_ungrab(zwin->win, "Left", 0, 0);
+	evas_object_key_ungrab(zwin->win, "Right", 0, 0);
 	evas_object_key_ungrab(zwin->win, "Home", 0, 0);
 	evas_object_key_ungrab(zwin->win, "End", 0, 0);
-	
-	elm_flip_content_back_set(zwin->zmain->fl, zwin->zinfo->frame);
-	sprintf(zwin->view, "info_vm");
-	elm_flip_go(zwin->zmain->fl, ELM_FLIP_ROTATE_Y_CENTER_AXIS);
-
-	EINA_LIST_FREE(zwin->elist, item)
-		free_vmitem(item);
-	zwin->elist = NULL;
-	eina_list_free(zwin->list);
-	zwin->list = NULL;
-	evas_object_hide(zwin->zmain->box2);
-	evas_object_del(zwin->zmain->box2);
-
-	zwin->timerget = ecore_timer_add(5, zinfo_job_updatevm, zwin);
-*/
 }

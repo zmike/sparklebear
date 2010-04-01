@@ -350,6 +350,8 @@ vm_info_cb(void *data, Evas_Object *obj, void *event_info)
 
 	evas_object_key_ungrab(zwin->win, "Up", 0, 0);
 	evas_object_key_ungrab(zwin->win, "Down", 0, 0);
+	evas_object_key_ungrab(zwin->win, "Left", 0, 0);
+	evas_object_key_ungrab(zwin->win, "Right", 0, 0);
 	evas_object_key_ungrab(zwin->win, "Home", 0, 0);
 	evas_object_key_ungrab(zwin->win, "End", 0, 0);
 	

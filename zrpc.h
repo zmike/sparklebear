@@ -4,6 +4,11 @@
 
 #ifndef ZRPC_H
 #define ZRPC_H
+
+/*for zrpc_user->type*/
+#define USER_LEVEL_MIN 0
+#define USER_LEVEL_MAX 5
+
 #define streq(s1, s2) (strcmp((s1), (s2)) ==0)
 #include <Eina.h>
 #include <Ecore_Con.h>

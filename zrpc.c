@@ -396,6 +396,7 @@ static void _collector(void *data, zrpc_handle h)
 	zrpc_user *user;
 	char *x, *y;
 	xmlNode *r;
+	double timer;
 	zrpc_network_cb cb;
 	zrpc_con *zcon;
 	static Eina_List *users;
@@ -422,8 +423,8 @@ static void _collector(void *data, zrpc_handle h)
 printf("DEBUG: waiting for %d user infos to come in...\n", numusers);
 #endif
 
-	it = 0;
-	while ((count < numusers) && (it < 2000))
+	timer = ecore_time_get();
+	while ((count < numusers) && (ecore_time_get() < (timer+10)))
 	{
 #ifdef DEBUG
 printf("DEBUG: %d of %d have arrived...\n", count, numusers);
