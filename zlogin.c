@@ -81,10 +81,12 @@ void zlogin_test(void *data, zrpc_handle h)
 
 	if ((ret = zwin->zcon->recbuf[h]))
 	{
-		tmp = strstr(ret, "sessid=");
-		sscanf(tmp, "sessid=%[^;];", zwin->zcon->zcookie);
-		printf("Cookie grabbed: %s\n", zwin->zcon->zcookie);
-		tmp = NULL;
+		if (!zwin->zcon->zcookie)
+		{
+			tmp = strstr(ret, "sessid=");
+			sscanf(tmp, "sessid=%[^;];", zwin->zcon->zcookie);
+			printf("Cookie grabbed: %s\n", zwin->zcon->zcookie);
+		}
 		charxml = strdup(strchr(ret, '<'));
 		free(ret);
 		zwin->zcon->recbuf[h] = NULL;
