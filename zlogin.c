@@ -63,10 +63,9 @@ void zlogin_stop(void *data)
 	elm_progressbar_pulse(zlogin->pb, 0);
 	evas_object_del(zlogin->pb);
 	ecore_timer_del(zlogin->lt);
-	
 }
 
-void zlogin_test(void *data, zrpc_handle h)
+void zlogin_test(void *data, const char *reply)
 {
 	zwin *zwin = data;
 	zlogin *zlogin = zwin->zlogin;
@@ -74,24 +73,18 @@ void zlogin_test(void *data, zrpc_handle h)
 	Evas_Object *l = lp->data;
 	Evas_Object *p = lp->next->data;
 	int zwidth = 800, zheight = 600;
-	char *ret, *tmp, *charxml;
+	const char *charxml;
 	xmlNode *r;
 	
 	if (!zwin->zcon->zcookie) zwin->zcon->zcookie = calloc(37, sizeof(char));
 
-	if ((ret = zwin->zcon->recbuf[h]))
+	if (reply)
 	{
-		if (!zwin->zcon->zcookie)
-		{
-			tmp = strstr(ret, "sessid=");
-			sscanf(tmp, "sessid=%[^;];", zwin->zcon->zcookie);
-			printf("Cookie grabbed: %s\n", zwin->zcon->zcookie);
-		}
-		charxml = strdup(strchr(ret, '<'));
-		free(ret);
-		zwin->zcon->recbuf[h] = NULL;
-
-		printf("parsing login...\n");
+		charxml = eina_stringshare_add(strchr(reply, '<'));
+		eina_stringshare_del(reply);
+#ifdef DEBUG
+printf("parsing login...\n");
+#endif
 		r = parsechar(charxml);
 	
 		if (parseint(r))
@@ -112,7 +105,8 @@ void zlogin_test(void *data, zrpc_handle h)
 			evas_object_show(zwin->zmain->notify);
 			evas_object_show(zwin->zmain->fl);
 			elm_flip_go(zwin->fl, ELM_FLIP_ROTATE_XZ_CENTER_AXIS);
-			sprintf(zwin->view, "main_vm");
+			zwin->view = zwin->zmain->view;
+			printf("current view: %s\nshould be: %s\n",zwin->view,zwin->zmain->view);
 			evas_object_del(zlogin->box);
 			eina_list_free(zlogin->lp);
 			zlogin->lp = NULL;
@@ -134,7 +128,6 @@ void zlogin_test(void *data, zrpc_handle h)
 	elm_object_disabled_set(p, EINA_FALSE);
 	elm_object_focus(l);
 	elm_scrolled_entry_cursor_end_set(l);
-
 }
 
 void zlogin_try(void *data, Evas_Object *obj, void *event_info)
@@ -147,24 +140,25 @@ void zlogin_try(void *data, Evas_Object *obj, void *event_info)
 	
 	const char *username = elm_scrolled_entry_entry_get(l);
 	const char *password = elm_scrolled_entry_entry_get(p);
-	printf("%s:%s\n", username, password);
+#ifdef DEBUG
+printf("%s:%s\n", username, password);
+#endif
 	
 	elm_object_disabled_set(l, EINA_TRUE);
 	elm_object_disabled_set(p, EINA_TRUE);
 
 	zlogin_start(zwin);
 
-	if (!zrpc_User_login(username, password, zwin->zcon, &zlogin_test, zwin))
-	{
-		zlogin_stop(zlogin);
-		elm_label_label_set(zlogin->stl, "Remote host could not be reached!");
-		evas_object_show(zlogin->status);
-		elm_object_disabled_set(l, EINA_FALSE);
-		elm_object_disabled_set(p, EINA_FALSE);
-		elm_object_focus(l);
-		elm_scrolled_entry_cursor_end_set(l);
-	}
+	if (zrpc_User_login(username, password, zwin->zcon, &zlogin_test, zwin))
+		return;
 
+	zlogin_stop(zlogin);
+	elm_label_label_set(zlogin->stl, "Remote host could not be reached!");
+	evas_object_show(zlogin->status);
+	elm_object_disabled_set(l, EINA_FALSE);
+	elm_object_disabled_set(p, EINA_FALSE);
+	elm_object_focus(l);
+	elm_scrolled_entry_cursor_end_set(l);
 }
 
 static void

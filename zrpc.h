@@ -17,20 +17,14 @@
 
 typedef int zrpc_handle;
 /*generic callback for every function call*/
-typedef void (*zrpc_network_cb)(void *, zrpc_handle);
-
-/*lazy attempt to avoid double free*/
-inline void zfree(void *data)
-{
-	if (data) free(data);
-}
+typedef void (*zrpc_network_cb)(void *, const char*);
 
 /*generic itoa*/
-char *itoa(int x)
+const char *itoa(int x)
 {
         char y[13];
         sprintf(y, "%d", x);
-        return strdup(y);
+        return eina_stringshare_add(y);
 }
 
 /*struct used to initiate a zrpc call*/
@@ -48,11 +42,11 @@ typedef struct _zrpc_con
 
 	/*use list for params to keep functions uniform*/
 	Eina_List *params[100];
-	char *buf[100], /*send buffer*/
-	*recbuf[100], /*receive buffer*/
+	const char *buf[100], /*send buffer*/
 	*call[100], 	/*rpc call name*/
 	*zcookie; /*session cookie from login*/
 	int bufsize[100], recbufsize[100];
+	char *recbuf[100]; /*receive buffer*/
 
 	/*this determines what should be done with the return data
 	 * almost definitely should not be null
@@ -115,20 +109,20 @@ typedef struct _zrpc_bridge {
 } zrpc_bridge;
 
 typedef struct _zrpc_disk {
-	char *int_dev;
-	char *ext_dev;
-	char *mode;
-	char *type;
+	const char *int_dev;
+	const char *ext_dev;
+	const char *mode;
+	const char *type;
 	int ooreq;
 	int rdreq;
 	int wrreq;
 	int num_sectors;
 	int size_sector;
-	char *partition_type;
+	const char *partition_type;
 	int start_sector;
 	int block_size;
 	int free;
-	char *mapped_dev;
+	const char *mapped_dev;
 } zrpc_disk;
 
 zrpc_disk *new_zdisk()
@@ -151,38 +145,38 @@ static void free_zdisk(zrpc_disk *disk)
 {
 	if (!disk) return;
 
-	zfree(disk->int_dev);
+	eina_stringshare_del(disk->int_dev);
 	disk->int_dev = NULL;
-	zfree(disk->ext_dev);
+	eina_stringshare_del(disk->ext_dev);
 	disk->ext_dev = NULL;
-	zfree(disk->mode);
+	eina_stringshare_del(disk->mode);
 	disk->mode = NULL;
-	zfree(disk->type);
+	eina_stringshare_del(disk->type);
 	disk->type = NULL;
-	zfree(disk->partition_type);
+	eina_stringshare_del(disk->partition_type);
 	disk->partition_type = NULL;
-	zfree(disk->mapped_dev);
+	eina_stringshare_del(disk->mapped_dev);
 	disk->mapped_dev = NULL;
 
-	zfree(disk);
+	free(disk);
 	disk = NULL;
 }
 
 typedef struct _zrpc_vif {
-	char *name;
-	char *mac;
-	char *bridge;
-	char *script;
-	char *type;
+	const char *name;
+	const char *mac;
+	const char *bridge;
+	const char *script;
+	const char *type;
 
 	Eina_Bool loopback;
 	Eina_Bool connected;
 	Eina_Bool promisc;
 
-	char *ip;
-	char *netmask;
-	char *gateway;
-	char *broadcast;
+	const char *ip;
+	const char *netmask;
+	const char *gateway;
+	const char *broadcast;
 		
 	int mtu;
 
@@ -222,43 +216,43 @@ static void free_zvif(zrpc_vif *vif)
 {
 	if (!vif) return;
 
-	zfree(vif->name);
+	eina_stringshare_del(vif->name);
 	vif->name = NULL;
-	zfree(vif->mac);
+	eina_stringshare_del(vif->mac);
 	vif->mac = NULL;
-	zfree(vif->bridge);
+	eina_stringshare_del(vif->bridge);
 	vif->bridge = NULL;
-	zfree(vif->script);
+	eina_stringshare_del(vif->script);
 	vif->script = NULL;
-	zfree(vif->type);
+	eina_stringshare_del(vif->type);
 	vif->type = NULL;
-	zfree(vif->ip);
+	eina_stringshare_del(vif->ip);
 	vif->ip = NULL;
-	zfree(vif->netmask);
+	eina_stringshare_del(vif->netmask);
 	vif->netmask = NULL;
-	zfree(vif->gateway);
+	eina_stringshare_del(vif->gateway);
 	vif->gateway = NULL;
-	zfree(vif->broadcast);
+	eina_stringshare_del(vif->broadcast);
 	vif->broadcast = NULL;
 
-	zfree(vif);
+	free(vif);
 
 }
 
 typedef struct _zrpc_vm {
-	char *name;
-	char *uuid;
-	char *puuid;
-	char *type;
-	char *os;
+	const char *name;
+	const char *uuid;
+	const char *puuid;
+	const char *type;
+	const char *os;
 	int id;
 
-	char *kernel;
-	char *ramdisk;	
-	char *cmdline;
-	char *on_reboot;
-	char *on_poweroff;	
-	char *on_crash; 
+	const char *kernel;
+	const char *ramdisk;	
+	const char *cmdline;
+	const char *on_reboot;
+	const char *on_poweroff;	
+	const char *on_crash; 
 
 	int mem;
 	int maxmem;
@@ -269,9 +263,9 @@ typedef struct _zrpc_vm {
 	int uptime;
 
 	int vncport;
-	char *vncpasswd;
+	const char *vncpasswd;
 	
-	char *state;
+	const char *state;
 
 	int numvbds;
 	Eina_List *disks;
@@ -311,31 +305,31 @@ static void free_zvm(zrpc_vm *vm)
 {
 	if (!vm) return;
 
-	zfree(vm->name);
+	eina_stringshare_del(vm->name);
 	vm->name = NULL;
-	zfree(vm->uuid);
+	eina_stringshare_del(vm->uuid);
 	vm->uuid = NULL;
-	zfree(vm->puuid);
+	eina_stringshare_del(vm->puuid);
 	vm->puuid = NULL;
-	zfree(vm->type);
+	eina_stringshare_del(vm->type);
 	vm->type = NULL;
-	zfree(vm->os);
+	eina_stringshare_del(vm->os);
 	vm->os = NULL;
-	zfree(vm->kernel);
+	eina_stringshare_del(vm->kernel);
 	vm->kernel = NULL;
-	zfree(vm->ramdisk);
+	eina_stringshare_del(vm->ramdisk);
 	vm->ramdisk = NULL;
-	zfree(vm->cmdline);
+	eina_stringshare_del(vm->cmdline);
 	vm->cmdline = NULL;
-	zfree(vm->on_reboot);
+	eina_stringshare_del(vm->on_reboot);
 	vm->on_reboot = NULL;
-	zfree(vm->on_poweroff);
+	eina_stringshare_del(vm->on_poweroff);
 	vm->on_poweroff = NULL;
-	zfree(vm->on_crash);
+	eina_stringshare_del(vm->on_crash);
 	vm->on_crash = NULL;
-	zfree(vm->vncpasswd);
+	eina_stringshare_del(vm->vncpasswd);
 	vm->vncpasswd = NULL;
-	zfree(vm->state);
+	eina_stringshare_del(vm->state);
 	vm->state = NULL;
 
 	if (vm->disks)
@@ -353,23 +347,23 @@ static void free_zvm(zrpc_vm *vm)
 		vm->vifs = NULL;
 	}
 
-	zfree(vm);
+	free(vm);
 	vm = NULL;
 
 }
 
 typedef struct _zrpc_node {
 
-  	char *hwuuid;
-	char *kernel;
-	char *address;
-	char *os;
-	char *architecture;
-	char *hostname;
-	char *domainname;
-	char *platformver;
-	char *platform;
-	char *default_vnc_pass;
+  	const char *hwuuid;
+	const char *kernel;
+	const char *address;
+	const char *os;
+	const char *architecture;
+	const char *hostname;
+	const char *domainname;
+	const char *platformver;
+	const char *platform;
+	const char *default_vnc_pass;
 	int  num_cpus;
 	int  cores_per_socket;
 	int  threads_per_core;
@@ -379,14 +373,14 @@ typedef struct _zrpc_node {
 	double  total_memory;
 
 	Eina_Bool hvm;
-	char *capabilities;
+	const char *capabilities;
 } zrpc_node;
 
 typedef struct _zrpc_nodestats {
 
   	int timestamp;	
 	double iowait;
-    	char *loadavg;
+    	const char *loadavg;
     	double uptime;
     	double cpupct;
    	int intr;
@@ -398,9 +392,9 @@ typedef struct _zrpc_nodestats {
     	int mem_buffered;
     	int swap_total;
     	int swap_free;
-    	char *domainname;
-    	char *hostname;
-    	char *address;
+    	const char *domainname;
+    	const char *hostname;
+    	const char *address;
     	double total_phys_mem;
     	double free_phys_mem;
 
@@ -409,11 +403,11 @@ typedef struct _zrpc_nodestats {
 typedef struct _zrpc_user {
 
         int uid;
-        char *name;
-        char *email;
+        const char *name;
+        const char *email;
         int active;
         int type;
-        char *language;
+        const char *language;
         
 } zrpc_user;
 
@@ -434,9 +428,9 @@ static void free_zuser(zrpc_user *user)
 {
 	if (!user) return;
 
-	zfree(user->name);
-	zfree(user->email);
-	zfree(user->language);
+	eina_stringshare_del(user->name);
+	eina_stringshare_del(user->email);
+	eina_stringshare_del(user->language);
 
 	free(user);
 	user = NULL;

@@ -12,7 +12,8 @@ static int
 _zcon_add(void *data, int type, void *event)
 {
 	zrpc_con *zcon;
-	char *zreq, *post, *http, *host, *itoav, *cookiestring;
+	const char *zreq, *itoav;
+	char *post, *http, *host, *cookiestring, *req;
 	Ecore_Con_Event_Server_Add *ev;
 	int len, headlen, x, host_header = 0, rsize;
 	zrpc_handle z = -1;
@@ -39,9 +40,9 @@ _zcon_add(void *data, int type, void *event)
 		return 1;
 	}
 	/*make this all local so we can reuse the struct later*/
-	zreq = strdup(zcon->buf[z]);
+	zreq = zcon->buf[z];
 	len = zcon->bufsize[z];
-	free(zcon->buf[z]);
+	zcon->buf[z] = NULL;
 	zcon->bufsize[z] = 0;
 
 
@@ -66,23 +67,27 @@ Content-length: ";
 	if (zcon->zcookie != NULL)
 	{/*add cookie if it exists*/
 		cookiestring = "Cookie: sessid=";
-		rsize = strlen(zreq)+headlen+strlen(itoav)+strlen(cookiestring)+strlen(zcon->zcookie);
-		zcon->buf[z] = calloc((rsize+4), sizeof(char)); /*+3 for newlines, 1 for null*/
-		if (host) sprintf(zcon->buf[z], "%s%s%s%d\n%s%s%s\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, cookiestring, zcon->zcookie, host, zreq);
-		else sprintf(zcon->buf[z], "%s%s%s%d\n%s%s\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, cookiestring, zcon->zcookie, zreq);
+		rsize = strlen(zreq)+headlen+eina_stringshare_strlen(itoav)+strlen(cookiestring)+eina_stringshare_strlen(zcon->zcookie);
+		req = calloc((rsize+4), sizeof(char)); /*+3 for newlines, 1 for null*/
+		if (host) sprintf(req, "%s%s%s%d\n%s%s%s\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, cookiestring, zcon->zcookie, host, zreq);
+		else sprintf(req, "%s%s%s%d\n%s%s\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, cookiestring, zcon->zcookie, zreq);
 	}
 	else
 	{/*must be a login, so no cookie added*/
-		zcon->buf[z] = calloc((strlen(zreq)+headlen+strlen(itoav))+3, sizeof(char));
-		if (host) sprintf(zcon->buf[z], "%s%s%s%d\n%s\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, host, zreq);
-		else sprintf(zcon->buf[z], "%s%s%s%d\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, zreq);
+		req = calloc((strlen(zreq)+headlen+eina_stringshare_strlen(itoav))+3, sizeof(char));
+		if (host) sprintf(req, "%s%s%s%d\n%s\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, host, zreq);
+		else sprintf(req, "%s%s%s%d\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, zreq);
 	}
 	/*free itoa result*/
-	free(itoav);
-	if (host) free(host);
+	eina_stringshare_del(itoav);
+	eina_stringshare_del(zreq);
+	free(host);
+
+	zcon->buf[z] = eina_stringshare_add(req);
+	free(req);
 
 	/*size of request*/
-	zcon->bufsize[z] = strlen(zcon->buf[z]);
+	zcon->bufsize[z] = eina_stringshare_strlen(zcon->buf[z]);
 
 #ifdef DEBUG
 	printf("\n\t\tCalling %s @ %s:%d\n", zcon->call[z], zcon->host, zcon->port);
@@ -94,7 +99,6 @@ Content-length: ";
 	if (!ecore_con_server_send(zcon->server[z], zcon->buf[z], zcon->bufsize[z]))
 		printf("send failed!\n");
 
-	free(zreq);
 	/*no need to free anything else, _zcon_del will take care of that*/
 
 	/*returning 1 means this function will continue to be reused
@@ -134,25 +138,22 @@ _zcon_del(void *data, int type, void *event)
 	zcon->server[z] = NULL;
 
 	/*reset buffer if it exists*/
-	zfree(zcon->buf[z]);
+	eina_stringshare_del(zcon->buf[z]);
 	zcon->buf[z] = NULL;
 
 	zcon->bufsize[z] = 0;
 
 	/*zero the reply since it will be wrong anyway*/
-	zfree(zcon->recbuf[z]);
+	eina_stringshare_del(zcon->recbuf[z]);
 	zcon->recbuf[z] = NULL;
 	zcon->recbufsize[z] = 0;
 
-	if (zcon->call[z])
-	{/*free the call*/
-		if (streq(zcon->call[z], "User.logout"))
-		{/*free/null the cookie on logout*/
-			zfree(zcon->zcookie);
-			zcon->zcookie = NULL;
-		}
-		free(zcon->call[z]);
+	if (streq(zcon->call[z], "User.logout"))
+	{/*free/null the cookie on logout*/
+		eina_stringshare_del(zcon->zcookie);
+		zcon->zcookie = NULL;
 	}
+	eina_stringshare_del(zcon->call[z]);
 
 	/*pass the callback so an error can be detected*/
 	if (zcon->cb[z])
@@ -163,7 +164,7 @@ _zcon_del(void *data, int type, void *event)
 			return 1;
 		}
 		/*run the cb, passing along the handle*/
-		cb(zcon->cbd[z], z);
+		cb(zcon->cbd[z], NULL);
 	}
 
 
@@ -179,7 +180,8 @@ _zcon_rec(void *data, int type, void *event)
 	zrpc_con *zcon;
 	Ecore_Con_Event_Server_Data *ev;
 	int x;
-	char *test;
+	char *test, buf[37];
+	const char *ret;
 	zrpc_handle z = -1;
 	zrpc_network_cb cb;
 
@@ -242,7 +244,7 @@ _zcon_rec(void *data, int type, void *event)
 		ecore_con_server_del(zcon->server[z]);
 		zcon->server[z] = NULL;
 
-		zfree(zcon->buf[z]);
+		eina_stringshare_del(zcon->buf[z]);
 		zcon->buf[z] = NULL;
 
 		zcon->bufsize[z] = 0;
@@ -252,12 +254,25 @@ _zcon_rec(void *data, int type, void *event)
 		{
 			if (streq(zcon->call[z], "User.logout"))
 			{
-				zfree(zcon->zcookie);
+				eina_stringshare_del(zcon->zcookie);
 				zcon->zcookie = NULL;
 			}
-			free(zcon->call[z]);
+			else if (streq(zcon->call[z], "User.login"))
+			{
+				test = strstr(zcon->recbuf[z], "sessid=");
+				sscanf(test, "sessid=%[^;];", buf);
+				zcon->zcookie = eina_stringshare_add(buf);
+#ifdef DEBUG
+printf("Cookie grabbed: %s\n", zcon->zcookie);
+#endif
+			}
+			eina_stringshare_del(zcon->call[z]);
 		}
 
+		ret = eina_stringshare_add(zcon->recbuf[z]);
+		free(zcon->recbuf[z]);
+		zcon->recbuf[z] = NULL;
+		
 		/*if we get this far, we have a null terminated rpc response
 		 * now we can use the zcon struct's callback if it exists
 		 */
@@ -268,8 +283,8 @@ _zcon_rec(void *data, int type, void *event)
 				printf("setting cb failed!\n");
 				return 1;
 			}
-			/*run the cb, passing along the handle*/
-			cb(zcon->cbd[z], z);
+			/*run the cb, passing along the reply*/
+			cb(zcon->cbd[z], ret);
 		}
 
 	}
@@ -279,7 +294,7 @@ _zcon_rec(void *data, int type, void *event)
 }
 
 /*meta function for all other zrpc functions; should not be called directly*/
-int zrpc_meta(char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	/*set up initial variables*/
 	xmlDocPtr doc;
@@ -303,7 +318,7 @@ int zrpc_meta(char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_cb cb,
 	printf("Grabbed handle: %d\n", z);
 #endif
 	/*set the call*/
-	zcon->call[z] = strdup(call);
+	zcon->call[z] = call;
 	/*set params*/
 	zcon->params[z] = params;
 	/*set cb*/
@@ -346,8 +361,8 @@ int zrpc_meta(char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_cb cb,
 	//dumps the xmldoc into a a xmlChar* which is the same as a char*
 	xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
 	//copy to zcon struct and set bufsize
-	zcon->buf[z] = strdup((char*)xmlbuff);
-	zcon->bufsize[z] = strlen(zcon->buf[z]);
+	zcon->buf[z] = eina_stringshare_add((char*)xmlbuff);
+	zcon->bufsize[z] = eina_stringshare_strlen(zcon->buf[z]);
 
 	//add event handlers if they don't exist
 	if (!zcon->add) zcon->add = ecore_event_handler_add(ECORE_CON_EVENT_SERVER_ADD, _zcon_add, zcon);
@@ -362,12 +377,11 @@ int zrpc_meta(char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_cb cb,
 		EINA_LIST_FREE(params, s)
 			if (isalnum((*(char*)s)))
 			/*check for strings to free*/
-				free(s);
+				eina_stringshare_del(s);
 
 	}
 	/*null the list to prevent magic fail if we reuse it*/
 	zcon->params[z] = NULL;
-	free(call);
 
 	//free xml stuff
 	xmlFree(xmlbuff);
@@ -388,16 +402,15 @@ static int uid_sort(const void *a, const void *b)
 	return x->uid - y->uid;
 }
 
-static void _collector(void *data, zrpc_handle h)
+static void _collector(void *data, const char *reply)
 {
 	zrpc_meta_struct *meta = data;
 	int it = 0, numusers = meta->num;
 	static int count;
 	zrpc_user *user;
-	char *x, *y;
+	const char *y;
 	xmlNode *r;
 	double timer;
-	zrpc_network_cb cb;
 	zrpc_con *zcon;
 	static Eina_List *users;
 
@@ -405,10 +418,8 @@ static void _collector(void *data, zrpc_handle h)
 
 	if (!(zcon = meta->zcon)) return;
 
-	x = zcon->recbuf[h];
-	y = strdup(strchr(x, '<'));
-	free(x);
-	zcon->recbuf[h] = NULL;
+	y = eina_stringshare_add(strchr(reply, '<'));
+	eina_stringshare_del(reply);
 	r = parsechar(y);
 
 	user = parseuser(r);
@@ -423,13 +434,12 @@ static void _collector(void *data, zrpc_handle h)
 printf("DEBUG: waiting for %d user infos to come in...\n", numusers);
 #endif
 
-	timer = ecore_time_get();
+	timer = ecore_time_get(); /*don't want to get stuck here*/
 	while ((count < numusers) && (ecore_time_get() < (timer+10)))
 	{
 #ifdef DEBUG
 printf("DEBUG: %d of %d have arrived...\n", count, numusers);
 #endif
-		it++;/*don't want to get stuck here*/
 		ecore_main_loop_iterate();
 	}
 	count = 0;
@@ -445,25 +455,22 @@ printf("DEBUG: %d of %d have arrived...\n", count, numusers);
 	meta->extra = users;
 	users = NULL;
 
-	cb = (zrpc_network_cb)meta->cb;
-	cb(meta, -1);
+	meta->cb(meta, NULL);
 }
 
-static void _getusers(void *data, zrpc_handle h)
+static void _getusers(void *data, const char *reply)
 {
 	zrpc_meta_struct *meta = data;
 	zrpc_con *zcon;
-	char *x, *y;
+	const char *y;
 	xmlNode *r;
 	int *users, it, numusers = 0;
 
 	if (!(zcon = meta->zcon)) return;
 
 	/*parsing*/
-	x = zcon->recbuf[h];
-	y = strdup(strchr(x, '<'));
-	free(x);
-	zcon->recbuf[h] = NULL;
+	y = eina_stringshare_add(strchr(reply, '<'));
+	eina_stringshare_del(reply);
 	r = parsechar(y);
 	users = parseusers(r);
 
@@ -474,7 +481,7 @@ static void _getusers(void *data, zrpc_handle h)
 	/*if 0, don't even bother*/
 	if (!numusers)
 	{
-		meta->cb(NULL, -1);
+		meta->cb(NULL, NULL);
 		return;
 	}
 

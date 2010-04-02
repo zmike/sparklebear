@@ -6,19 +6,18 @@
  */
 
 #define DEBUG 1 /*enables some general parsing debug info*/
-#define DEV_DEBUG 1/*shows full rpc call send/receive*/
+#define XML_DEBUG 1/*shows full rpc call send/receive*/
 #include <stdio.h>
 #include "zrpc.h"
 #include "zrpc.c"
 
 /*after logout completes*/
-void cleanup(zrpc_con *zcon, zrpc_handle h)
+void cleanup(zrpc_con *zcon, const char *reply)
 {
-	char *xml, *charxml;
+	const char *charxml;
 	xmlNode *r;
 
-	xml = zcon->recbuf[h];
-	charxml = strdup(strchr(xml, '<'));
+	charxml = eina_stringshare_add(strchr(reply, '<'));
 	r = parsechar(charxml);
 	if (parseint(r))
 		printf("Logout successful!\n");
@@ -29,20 +28,16 @@ void cleanup(zrpc_con *zcon, zrpc_handle h)
 }
 
 /*second callback, parses getVMsFull*/
-void print_infos(zrpc_con *zcon, zrpc_handle h)
+void print_infos(zrpc_con *zcon, const char *reply)
 {
 	/*seek to the xml data*/
-	char *xmlvms; = zcon->recbuf[h];
-	char *charxml; = strdup(strchr(xmlvms, '<'));
+	const char *charxml;
 	Eina_List *vms, *l;
 	zrpc_vm *vm;
 	xmlNode *r;
 
-
-	xmlvms; = zcon->recbuf[h];
-	charxml; = strdup(strchr(xmlvms, '<'));
-	free(xmlvms);
-	zcon->recbuf[h] = NULL;
+	charxml = eina_stringshare_add(strchr(reply, '<'));
+	eina_stringshare_del(reply);
 
 	/*parse the shit out of it*/
 	r = parsechar(charxml);
@@ -61,23 +56,14 @@ void print_infos(zrpc_con *zcon, zrpc_handle h)
 }
 
 /*the first callback, called after login response has been received*/
-void post(zrpc_con *zcon, zrpc_handle h)
+void post(zrpc_con *zcon, const char *reply)
 {/*parameters are a zcon handle, and the handle number*/
-
-	/*grab the cookie*/
-	char *tmp, *xml, *charxml;
+	const char *tmp, *xml, *charxml;
 	xmlNode *r;
 
-
-	tmp = strstr(zcon->recbuf[h], "sessid=");
-	zcon->zcookie = calloc(37, sizeof(char));
-	sscanf(tmp, "sessid=%[^;];", zcon->zcookie);
-	
 	/*new pointer to seek to the xml data*/
-	xml = zcon->recbuf[h];
-	charxml = strdup(strchr(xml, '<'));
-	free(xml);
-	zcon->recbuf[h] = NULL;
+	charxml = eina_stringshare_add(strchr(reply, '<'));
+	eina_stringshare_del(reply);
 	/* char* -> xmlNode */
 	r = parsechar(charxml);
 	/*parseint handles int and boolean tags and returns the value.
@@ -100,11 +86,15 @@ int main()
 	/*no new function because there's no free function*/
 	static zrpc_con zcon;
 	/*set up host/port*/
-	zcon.host = "www.domain.com";
-	zcon.port = 4444;
+//	zcon.host = "www.domain.com";
+//	zcon.port = 4444;
+	zcon.host = "10.10.10.6";
+	zcon.port = 65534;
 
-	char *username = "someuser";
-	char *password = "somepassword";
+//	char *username = "someuser";
+//	char *password = "somepassword";
+	char *username = "admin";
+	char *password = "sparklebear";
 
 	/*all zrpc functions take a minimum of 3 arguments:
 	 * 1) a zcon handle

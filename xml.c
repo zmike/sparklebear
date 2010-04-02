@@ -113,15 +113,15 @@ zrpc_user *parseuser(xmlNode *node)
 		if (streq(name, "uid"))
 			user->uid = atoi(value);
 		else if (streq(name, "name"))
-			user->name = strdup(value);
+			user->name = eina_stringshare_add(value);
 		else if (streq(name, "email"))
-			user->email = strdup(value);
+			user->email = eina_stringshare_add(value);
 		else if (streq(name, "active"))
 			user->active = atoi(value);
 		else if (streq(name, "type"))
 			user->type = atoi(value);
 		else if (streq(name, "language"))
-			user->language = strdup(value);
+			user->language = eina_stringshare_add(value);
 
 		node2 = xml_safenext(node2->next);
 	}
@@ -167,29 +167,29 @@ zrpc_vm *parsevm(xmlNode *node)
 
 		
 		if (streq(name, "name"))
-			vm->name = strdup(value);
+			vm->name = eina_stringshare_add(value);
 		else if (streq(name, "uuid"))
-			vm->uuid = strdup(value);
+			vm->uuid = eina_stringshare_add(value);
 		else if (streq(name, "puuid"))
-			vm->puuid = strdup(value);
+			vm->puuid = eina_stringshare_add(value);
 		else if (streq(name, "type"))
-			vm->type = strdup(value);
+			vm->type = eina_stringshare_add(value);
 		else if (streq(name, "os"))
-			vm->os = strdup(value);
+			vm->os = eina_stringshare_add(value);
 		else if (streq(name, "id"))
 			vm->id = atoi(value);
 		else if (streq(name, "kernel"))
-			vm->kernel = strdup(value);
+			vm->kernel = eina_stringshare_add(value);
 		else if (streq(name, "ramdisk"))
-			vm->ramdisk = strdup(value);
+			vm->ramdisk = eina_stringshare_add(value);
 		else if (streq(name, "cmdline"))
-			vm->cmdline = strdup(value);
+			vm->cmdline = eina_stringshare_add(value);
 		else if (streq(name, "on_reboot"))
-			vm->on_reboot = strdup(value);
+			vm->on_reboot = eina_stringshare_add(value);
 		else if (streq(name, "on_poweroff"))
-			vm->on_poweroff = strdup(value);
+			vm->on_poweroff = eina_stringshare_add(value);
 		else if (streq(name, "on_crash"))
-			vm->on_crash = strdup(value);
+			vm->on_crash = eina_stringshare_add(value);
 		else if (streq(name, "mem"))
 			vm->mem = atoi(value);
 		else if (streq(name, "maxmem"))
@@ -205,9 +205,9 @@ zrpc_vm *parsevm(xmlNode *node)
 		else if (streq(name, "vncport"))
 			vm->vncport = atoi(value);
 		else if (streq(name, "vncpasswd"))
-			vm->vncpasswd = strdup(value);
+			vm->vncpasswd = eina_stringshare_add(value);
 		else if (streq(name, "state"))
-			vm->state = strdup(value);
+			vm->state = eina_stringshare_add(value);
 		else if (streq(name, "numvbds"))
 			vm->numvbds = atoi(value);
 		else if (streq(name, "disks"))
@@ -247,13 +247,13 @@ zrpc_vm *parsevm(xmlNode *node)
 
 					
 					if (streq(name, "int_dev"))
-						disk->int_dev = strdup(value2);
+						disk->int_dev = eina_stringshare_add(value2);
 					else if (streq(name, "ext_dev"))
-						disk->ext_dev = strdup(value2);
+						disk->ext_dev = eina_stringshare_add(value2);
 					else if (streq(name, "mode"))
-						disk->mode = strdup(value2);
+						disk->mode = eina_stringshare_add(value2);
 					else if (streq(name, "type"))
-						disk->type = strdup(value2);
+						disk->type = eina_stringshare_add(value2);
 					else if (streq(name, "ooreq"))
 						disk->ooreq = atoi(value2);
 					else if (streq(name, "rdreq"))
@@ -265,7 +265,7 @@ zrpc_vm *parsevm(xmlNode *node)
 					else if (streq(name, "size_sector"))
 						disk->size_sector = atoi(value2);
 					else if (streq(name, "partition_type"))
-						disk->partition_type = strdup(value2);
+						disk->partition_type = eina_stringshare_add(value2);
 					else if (streq(name, "start_sector"))
 						disk->start_sector = atoi(value2);
 					else if (streq(name, "block_size"))
@@ -273,7 +273,7 @@ zrpc_vm *parsevm(xmlNode *node)
 					else if (streq(name, "free"))
 						disk->free = atoi(value2);
 					else if (streq(name, "mapped_dev"))
-						disk->mapped_dev = strdup(value2);
+						disk->mapped_dev = eina_stringshare_add(value2);
 						
 					node4 = xml_safenext(node4->next);
 				}
@@ -324,15 +324,15 @@ zrpc_vm *parsevm(xmlNode *node)
 
 
 					if (streq(name, "name"))
-						vif->name = strdup(value2);
+						vif->name = eina_stringshare_add(value2);
 					else if (streq(name, "mac"))
-						vif->mac = strdup(value2);
+						vif->mac = eina_stringshare_add(value2);
 					else if (streq(name, "bridge"))
-						vif->bridge = strdup(value2);
+						vif->bridge = eina_stringshare_add(value2);
 					else if (streq(name, "script"))
-						vif->script = strdup(value2);
+						vif->script = eina_stringshare_add(value2);
 					else if (streq(name, "type"))
-						vif->type = strdup(value2);
+						vif->type = eina_stringshare_add(value2);
 					else if (streq(name, "loopback"))
 						vif->loopback = *(Eina_Bool*)value2;
 					else if (streq(name, "connected"))
@@ -340,13 +340,13 @@ zrpc_vm *parsevm(xmlNode *node)
 					else if (streq(name, "promisc"))
 						vif->promisc = *(Eina_Bool*)value2;
 					else if (streq(name, "ip"))
-						vif->ip = strdup(value2);
+						vif->ip = eina_stringshare_add(value2);
 					else if (streq(name, "netmask"))
-						vif->netmask = strdup(value2);
+						vif->netmask = eina_stringshare_add(value2);
 					else if (streq(name, "gateway"))
-						vif->gateway = strdup(value2);
+						vif->gateway = eina_stringshare_add(value2);
 					else if (streq(name, "broadcast"))
-						vif->broadcast = strdup(value2);
+						vif->broadcast = eina_stringshare_add(value2);
 					else if (streq(name, "mtu"))
 						vif->mtu = atoi(value2);
 					else if (streq(name, "txpackets"))
@@ -496,14 +496,14 @@ Eina_List *parsevmsfull(xmlNode *node)
 }
 
 /*simple function to turn xml response into a parseable xml node*/
-xmlNode *parsechar(char *charxml)
+xmlNode *parsechar(const char *charxml)
 {
-	char *xml;
+	const char *xml;
 	xmlDocPtr doc;
 	xmlNode *root, *root2;
 
-	xml = (char*)xmlCharStrdup(charxml);
-	if ((doc = xmlParseMemory(xml, strlen((char*)xml))) == NULL)
+	xml = eina_stringshare_add(charxml);
+	if ((doc = xmlParseMemory(xml, eina_stringshare_strlen(xml))) == NULL)
 		return EINA_FALSE;
 
 	if ((root = xmlDocGetRootElement(doc)) == NULL)
@@ -511,8 +511,8 @@ xmlNode *parsechar(char *charxml)
 
 	root2 = xmlCopyNodeList(root);
 
-	free(xml);
-	free(charxml);
+	eina_stringshare_del(xml);
+	eina_stringshare_del(charxml);
 	xmlFreeDoc(doc);
 
 	return root2;
@@ -551,9 +551,9 @@ void xml_newstring(xmlDocPtr doc, const char *string)
 void xml_newint(xmlDocPtr doc, int i)
 {
 	xmlNodePtr node, node2, p, v, s;
-	char *i2;
+	const char *i2;
 
-	i2 = itoa(i); //must be freed
+	i2 = itoa(i);
 	node = xmlDocGetRootElement(doc); //methodCall
     	for (node2 = node; node2; node2 = node2->children->next)
 		if (streq((char*)node2->name, "params"))
@@ -563,6 +563,6 @@ void xml_newint(xmlDocPtr doc, int i)
 			s = xmlNewChild(v, NULL, BAD_CAST "int", BAD_CAST i2);
 			break;
 		}
-	free(i2);
+	eina_stringshare_del(i2);
 
 }

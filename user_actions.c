@@ -1,17 +1,16 @@
 static void
-user_action_cb(void *data, zrpc_handle h)
+user_action_cb(void *data, const char *reply)
 {
 	zwin *zwin = data;
-	char *xmlchar, *charxml;
+	const char *charxml;
 	xmlNode *r;
 	Elm_Genlist_Item *gl;
 	useritem *item;
 	zrpc_user *user;
 
-	if (!(xmlchar = zwin->zcon->recbuf[h]))
-		return;
-	charxml = strdup(strchr(xmlchar, '<'));
-	free(xmlchar);
+	if (!reply) return;
+	charxml = eina_stringshare_add(strchr(reply, '<'));
+	eina_stringshare_del(reply);
 	r = parsechar(charxml);
 	if (parseint(r))
 	{
@@ -100,6 +99,8 @@ user_info_cb(void *data, Evas_Object *obj, void *event_info)
 
 	create_zinfo_user(zwin);
 	zinfo_job_updateuser(zwin, NULL, NULL);
+
+	zwin->view = zinfo->userview;
 
 	evas_object_key_ungrab(zwin->win, "Up", 0, 0);
 	evas_object_key_ungrab(zwin->win, "Down", 0, 0);

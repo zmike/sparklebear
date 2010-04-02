@@ -42,12 +42,12 @@ key_press(void *data, Evas *a, Evas_Object *obj, void *event_info)
 #ifdef DEBUG
 	printf("You pressed: %s\n", key->keyname);
 #endif
-	if (streq(zwin->view, "login"))
+	if (zwin->view == zwin->zlogin->view)
 		zlogin_keybind(zwin, key);
-	else if (strstr(zwin->view, "main_"))
+	else if ((zwin->view == zwin->zmain->view) || (zwin->view == zwin->zmain_user->view))
 		zmain_vm_keybind(zwin, key);
-	else if (strstr(zwin->view, "info"))
-		zinfo_vm_keybind(zwin, key);	
+	else if ((zwin->view == zwin->zinfo->vmview) || (zwin->view == zwin->zinfo->vmhover) || (zwin->view == zwin->zinfo->userview))
+		zinfo_keybind(zwin, key);	
 }
 
 
@@ -81,6 +81,12 @@ elm_main(int argc, char **argv)
 	zcon.port = PORT;
 
 
+	zlogin.view = eina_stringshare_add("login");
+	zinfo.vmview = eina_stringshare_add("info_vm");
+	zinfo.vmhover = eina_stringshare_add("info_vm_hover");
+	zinfo.userview = eina_stringshare_add("info_user");
+	zmain.view = eina_stringshare_add("main_vm");
+	zmain_user.view = eina_stringshare_add("main_user");
 	
 	static Elm_Genlist_Item_Class itc;
 	zmain.itc = &itc;
@@ -148,7 +154,7 @@ elm_main(int argc, char **argv)
 	elm_flip_content_front_set(zwin.fl, zlogin.box);
 	evas_object_show(zwin.fl);
 	evas_object_show(zwin.win);
-	sprintf(zwin.view, "login");
+	zwin.view = zlogin.view;
 
 	elm_run();
 	xmlCleanupParser();

@@ -1,5 +1,5 @@
 static void
-zinfo_updatevm(void *data, zrpc_handle h)
+zinfo_updatevm(void *data, const char *reply)
 {
 	zwin *zwin = data;
 	zinfo *zinfo = zwin->zinfo;
@@ -9,13 +9,12 @@ zinfo_updatevm(void *data, zrpc_handle h)
 //	zrpc_vif *v, *b;
 //	Elm_Hoversel_Item *it;
 //	int found = 0;
-	char *xmlvm, *charxml, *icon, *state, tmp[13];
+	const char *charxml, *icon, *state;
+	char tmp[13];
 	xmlNode *r;
 	
-	xmlvm = zwin->zcon->recbuf[h];
-	charxml = strdup(strchr(xmlvm, '<'));
-	free(xmlvm);
-	zwin->zcon->recbuf[h] = NULL;
+	charxml = eina_stringshare_add(strchr(reply, '<'));
+	eina_stringshare_del(reply);
 	r = parsechar(charxml);
 	if (!(vm = parsevm(r)))
 	{
@@ -49,9 +48,7 @@ zinfo_updatevm(void *data, zrpc_handle h)
 	icon = get_state_icon(vm->state);
 	elm_icon_file_set(zinfo->state_icon, icon, NULL);
 
-	zfree(zinfo->state);
-	zinfo->state = NULL;
-	zinfo->state = strdup(vm->state);
+	zinfo->state = eina_stringshare_add(vm->state);
 
 	state = get_state_name(zinfo->state);
 	elm_label_label_set(zinfo->state_label, state);
@@ -63,11 +60,11 @@ zinfo_updatevm(void *data, zrpc_handle h)
 	EINA_LIST_FOREACH(vm->vifs, l, v)
 		elm_hoversel_item_add(zinfo->vifs, v->name, NULL, ELM_ICON_NONE, NULL, v);
 */
-
+	
 	free_zvm(vm);
-	vm = NULL;
-	free(icon);
-	free(state);
+	eina_stringshare_del(zinfo->state);
+	eina_stringshare_del(icon);
+	eina_stringshare_del(state);
 }
 
 int
@@ -111,7 +108,8 @@ void
 zinfo_job_updateuser_level(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
-	char *tmp, buf[128];
+	const char *tmp;
+	char buf[128];
 	int x;
 	
 	x = (int)elm_slider_value_get(zwin->zinfo->level);
@@ -122,7 +120,7 @@ zinfo_job_updateuser_level(void *data, Evas_Object *obj, void *event_info)
 
 	tmp = get_access_icon(x);
 	elm_icon_file_set(zwin->zinfo->level_icon, tmp, NULL);
-	free(tmp);
+	eina_stringshare_del(tmp);
 
 	tmp = get_access_name(x);
 #ifdef DEBUG
@@ -131,7 +129,7 @@ printf("DEBUG: setting level to %s\n", tmp);
 	sprintf(buf, "Access level: %s", tmp);
 	elm_label_label_set(zwin->zinfo->lb, buf);
 
-	free(tmp);
+	eina_stringshare_del(tmp);
 }
 
 
@@ -165,7 +163,8 @@ zinfo_job_updateuser(void *data, Evas_Object *obj, void *event_info)
 	zwin *zwin = data;
 	zrpc_user *user;
 	zinfo *zinfo = zwin->zinfo;
-	char *tmp, buf[128];
+	const char *tmp;
+	char buf[128];
 
 
 	if (!(user = zinfo_user_findbyuid(zwin)))
@@ -182,14 +181,14 @@ printf("DEBUG: setting access type to %s\n", tmp);
 #endif
 	sprintf(buf, "Access level: %s", tmp);
 	elm_label_label_set(zinfo->lb, buf);
-	free(tmp);
+	eina_stringshare_del(tmp);
 
 	tmp = get_access_icon(user->type);
 #ifdef DEBUG
 printf("DEBUG: setting access icon to %s\n", tmp);
 #endif
 	elm_icon_file_set(zinfo->level_icon, tmp, NULL);
-	free(tmp);
+	eina_stringshare_del(tmp);
 
 #ifdef DEBUG
 printf("DEBUG: user is %s\n", (user->active) ? "active" : "inactive");
@@ -206,7 +205,7 @@ printf("DEBUG: access type is %d\n", user->type);
 
 	tmp = itoa(user->uid);
 	elm_scrolled_entry_entry_set(zinfo->id, tmp);
-	free(tmp);
+	eina_stringshare_del(tmp);
 
 	elm_scrolled_entry_entry_set(zinfo->name, user->name);
 	elm_scrolled_entry_entry_set(zinfo->email, user->email);
@@ -229,7 +228,7 @@ zinfo_to_zlogin(void *data, Evas_Object *obj, void *event_info)
 	evas_object_resize(zwin->win, zwidth, zheight);
 	evas_object_move(zwin->win, (zwin->xres/2)-(zwidth/2), (zwin->yres/2)-(zheight/2));
 
-	sprintf(zwin->view, "login");
+	zwin->view = zwin->zlogin->view;
 
 	evas_object_hide(zwin->zinfo->frame);
 //	evas_object_del(zwin->zinfo->frame);
@@ -238,9 +237,9 @@ zinfo_to_zlogin(void *data, Evas_Object *obj, void *event_info)
 	evas_object_hide(zwin->zmain->box);
 	evas_object_del(zwin->zmain->box);
 
-	zfree(zwin->zinfo->vmuuid);
+	eina_stringshare_del(zwin->zinfo->vmuuid);
 	zwin->zinfo->vmuuid = NULL;
-	zfree(zwin->zinfo->state);
+	eina_stringshare_del(zwin->zinfo->state);
 	zwin->zinfo->state = NULL;
 }
 
@@ -257,7 +256,7 @@ zinfo_to_zmain(void *data, Evas_Object *obj, void *event_info)
 	ecore_job_add((void*)zmain_job_getvms, zwin);
 	elm_flip_content_front_set(zwin->zmain->fl, zwin->zmain->box2);
 	elm_flip_go(zwin->zmain->fl, ELM_FLIP_ROTATE_X_CENTER_AXIS);
-	sprintf(zwin->view, "main_vm");
+	zwin->view = zwin->zmain->view;
 	x = evas_object_key_grab(zwin->win, "Up", 0, 0, 1);
 	x = evas_object_key_grab(zwin->win, "Down", 0, 0, 1);
 	x = evas_object_key_grab(zwin->win, "Left", 0, 0, 1);
@@ -276,20 +275,20 @@ zinfo_destroy_hover(void *data, Evas_Object *obj, void *event_info)
 	zinfo *zinfo = zwin->zinfo;
 	int x;
 
-	evas_object_hide(zinfo->vbox1);
-	evas_object_del(zinfo->vbox1);
+//	evas_object_hide(zinfo->vbox1);
+//	evas_object_del(zinfo->vbox1);
 	evas_object_hide(zinfo->hover);
 	evas_object_del(zinfo->hover);
 
-	if (streq(zwin->view, "info_hover_vm"))
-		sprintf(zwin->view, "info_vm");
-	else if (streq(zwin->view, "info_hover_user"))
+	if (zwin->view == zinfo->vmhover)
+		zwin->view = zinfo->vmview;
+	else if (zwin->view == zinfo->userview)
 	{
 		evas_object_hide(zinfo->lb);
 		evas_object_del(zinfo->lb);
 		zinfo->uid = -1;
 		zinfo->newuid = -1;
-		sprintf(zwin->view, "main_user");
+		zwin->view = zwin->zmain_user->view;
 	}
 
 	x = evas_object_key_grab(zwin->win, "Up", 0, 0, 1);
@@ -305,7 +304,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
 	zinfo *zinfo = zwin->zinfo;
-	char *state = zinfo->state;
+	const char *state = zinfo->state;
 
 	zinfo->hover = elm_hover_add(zwin->win);
 	elm_object_style_set(zinfo->hover, "popout");
@@ -434,20 +433,20 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 	elm_hover_content_set(zinfo->hover, "bottom", zinfo->hb);
 	evas_object_show(zinfo->hb);
 
-	sprintf(zwin->view, "info_hover_vm");
+	zwin->view = zinfo->vmhover;
 	evas_object_show(zinfo->hover);	
 
 }
 
 void
-zinfo_vm_keybind(void *data, Evas_Event_Key_Down *key)
+zinfo_keybind(void *data, Evas_Event_Key_Down *key)
 {
 	zwin *zwin = data;
 
-	if (streq(zwin->view, "info_vm"))
+	if (zwin->view == zwin->zinfo->vmview)
 		if (streq(key->keyname, "Escape"))
 			zinfo_to_zmain(zwin, NULL, NULL);
-	if (streq(zwin->view, "info_hover_vm") || streq(zwin->view, "info_hover_user"))
+	if ((zwin->view == zwin->zinfo->vmhover) || (zwin->view == zwin->zinfo->userview))
 		if (streq(key->keyname, "Escape"))
 			zinfo_destroy_hover(zwin, NULL, NULL);
 
@@ -731,7 +730,7 @@ create_zinfo_user(void *data)
 
 	zinfo->frame = elm_frame_add(zwin->win);
 	evas_object_size_hint_expand_set(zinfo->frame, 1, 0);
-	evas_object_size_hint_fill_set(zinfo->frame, -1, -1);
+	evas_object_size_hint_fill_set(zinfo->frame, -1, 0);
 	elm_frame_label_set(zinfo->frame, "UID");
 	elm_object_scale_set(zinfo->frame, 1.5);
 	zinfo->id = elm_scrolled_entry_add(zwin->win);
@@ -746,7 +745,7 @@ create_zinfo_user(void *data)
 	zinfo->frame = elm_frame_add(zwin->win);
 	elm_object_scale_set(zinfo->frame, 1.5);
 	evas_object_size_hint_expand_set(zinfo->frame, 1, 0);
-	evas_object_size_hint_fill_set(zinfo->frame, -1, -1);
+	evas_object_size_hint_fill_set(zinfo->frame, -1, 0);
 	elm_frame_label_set(zinfo->frame, "Name");
 
 	zinfo->name = elm_scrolled_entry_add(zwin->win);
@@ -766,7 +765,7 @@ create_zinfo_user(void *data)
 	zinfo->frame = elm_frame_add(zwin->win);
 	elm_object_scale_set(zinfo->frame, 1.5);
 	evas_object_size_hint_expand_set(zinfo->frame, 1, 0);
-	evas_object_size_hint_fill_set(zinfo->frame, -1, -1);
+	evas_object_size_hint_fill_set(zinfo->frame, -1, 0);
 	elm_frame_label_set(zinfo->frame, "Password");
 
 	zinfo->pass = elm_scrolled_entry_add(zwin->win);
@@ -860,8 +859,6 @@ create_zinfo_user(void *data)
 	evas_object_show(zinfo->hb);
 
 	evas_object_show(zinfo->hbox);
-
-	sprintf(zwin->view, "info_hover_user");
 	evas_object_show(zinfo->hover);	
 
 }

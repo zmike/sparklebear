@@ -42,8 +42,8 @@ typedef struct _vmitem
 {
 	Elm_Genlist_Item *item;
 	zrpc_vm *vm;
-	char *uuid;
-	char *state;
+	const char *uuid;
+	const char *state;
 } vmitem;
 
 vmitem *new_vmitem()
@@ -63,9 +63,9 @@ void free_vmitem(vmitem *item)
 {
 	if (!item) return;
 
-	zfree(item->uuid);
+	eina_stringshare_del(item->uuid);
 	item->uuid = NULL;
-	zfree(item->state);
+	eina_stringshare_del(item->state);
 	item->state = NULL;
 	if (item->vm)
 	{
@@ -73,7 +73,7 @@ void free_vmitem(vmitem *item)
 		item->vm = NULL;
 	}
 
-	zfree(item);
+	free(item);
 	item = NULL;
 
 }
@@ -108,7 +108,7 @@ void free_useritem(useritem *item)
 		item->user = NULL;
 	}
 
-	zfree(item);
+	free(item);
 	item = NULL;
 
 }
@@ -122,6 +122,7 @@ typedef struct _zlogin
 		*fr3, *box2, *status, *stl;
 	Ecore_Timer *lt;
 	Eina_List *lp;
+	const char *view;
 } zlogin;
 
 typedef struct _zmain
@@ -136,6 +137,7 @@ typedef struct _zmain
 	Elm_Toolbar_Item *tbitem;
 	Ecore_Animator *anim;
 	Eina_List *tb_list;
+	const char *view;
 } zmain;
 
 typedef struct _zinfo
@@ -151,7 +153,8 @@ typedef struct _zinfo
 		*kernel, *ramdisk, *cmdline,
 			*notesframe, *notes, *notesend;
 	Ecore_Timer *update;
-	char *vmuuid, *state;
+	const char *vmuuid, *state;
+	const char *userview, *vmview, *vmhover;
 	int uid, newuid, ulevel;
 } zinfo;
 
@@ -167,7 +170,7 @@ typedef struct _zwin
 	int vmtimer, usertimer;
 	zrpc_con *zcon;
 	int xres, yres;
-	char view[10];
+	const char *view;
 } zwin;
 
 static void
@@ -177,7 +180,7 @@ exit_wrapper(void *data, Evas_Object *obj, void *event_info)
 	zwin *zwin = data;
 	vmitem *item;
 	
-	if (streq(zwin->view, "main_vm"))
+	if (zwin->view == zwin->zmain->view)
 		EINA_LIST_FREE(zwin->elist, item)
 			free_vmitem(item);
 #endif
@@ -186,96 +189,97 @@ exit_wrapper(void *data, Evas_Object *obj, void *event_info)
 	elm_exit();
 }
 
-char *get_os_icon(const zrpc_vm *vm)
+const char *
+get_os_icon(const zrpc_vm *vm)
 {
-	char *buf;
+	const char *buf;
 
 	if (strstr(vm->os, "inux"))
-		buf = strdup("images/tux.png");
+		buf = "images/tux.png";
 	else if (strstr(vm->os, "indows"))
-		buf = strdup("images/windows.png");
-	else buf = strdup("images/unknown.png");
+		buf = "images/windows.png";
+	else buf = "images/unknown.png";
 
-	return buf;
+	return eina_stringshare_add(buf);
 }
 
-char *get_state_icon(const char *state)
+const char *
+get_state_icon(const char *state)
 {
-	char buf[PATH_MAX], *ret;
+	const char *buf;
 
 	if (streq(state, "") || streq(state, "r"))
-		sprintf(buf, "images/player_play.png");
+		buf = "images/player_play.png";
 	else if (streq(state, "b"))
-		sprintf(buf, "images/player_time.png");
+		buf = "images/player_time.png";
 	else if (streq(state, "d") || streq(state, "s"))
-		sprintf(buf, "images/player_stop.png");
+		buf = "images/player_stop.png";
 	else if (streq(state, "p"))
-		sprintf(buf, "images/player_pause.png");
+		buf = "images/player_pause.png";
 	else
-		sprintf(buf, "images/dialog_close.png");
+		buf = "images/dialog_close.png";
 
-	ret = strdup(buf);
-	return ret;
+	return eina_stringshare_add(buf);
 }
 
-char *get_state_name(const char *state)
+const char *
+get_state_name(const char *state)
 {
-	char buf[15], *ret;
+	const char *buf;
 
 	if (streq(state, "") || streq(state, "r"))
-		sprintf(buf, "Running");
+		buf = "Running";
 	else if (streq(state, "b"))
-		sprintf(buf, "Blocked");
+		buf = "Blocked";
 	else if (streq(state, "d") || streq(state, "s"))
-		sprintf(buf, "Dying");
+		buf = "Dying";
 	else if (streq(state, "p"))
-		sprintf(buf, "Paused");
+		buf = "Paused";
 	else
-		sprintf(buf, "Shut Down");
+		buf = "Shut Down";
 
-	ret = strdup(buf);
-	return ret;
+
+	return eina_stringshare_add(buf);
 }
 
-char *get_access_icon(int level)
+const char *
+get_access_icon(int level)
 {
-	char buf[PATH_MAX], *ret;
+	const char *buf;
 
 	if (level == 0)/*SuperUser*/
-		sprintf(buf, "images/configure.png");
+		buf = "images/configure.png";
 	else if (level == 1)/*Maintenance*/
-		sprintf(buf, "images/configure_toolbars.png");
+		buf = "images/configure_toolbars.png";
 	else if (level == 2)/*Owner*/
-		sprintf(buf, "images/exec.png");
+		buf = "images/exec.png";
 	else if (level == 3)/*Admin*/
-		sprintf(buf, "images/edit_find_user.png");
+		buf = "images/edit_find_user.png";
 	else if (level == 4)/*R/O Admin*/
-		sprintf(buf, "images/document_preview_archive.png");
+		buf = "images/document_preview_archive.png";
 	else if (level == 5)/*none*/
-		sprintf(buf, "images/edit_clear_locationbar.png");
+		buf = "images/edit_clear_locationbar.png";
 
-	ret = strdup(buf);
-	return ret;
+	return eina_stringshare_add(buf);
 }
 
-char *get_access_name(int level)
+const char *
+get_access_name(int level)
 {
-	char buf[PATH_MAX], *ret;
+	const char *buf;
 
 	if (level == 0)/*SuperUser*/
-		sprintf(buf, "SuperUser");
+		buf = "SuperUser";
 	else if (level == 1)/*Maintenance*/
-		sprintf(buf, "Maintenance");
+		buf = "Maintenance";
 	else if (level == 2)/*Owner*/
-		sprintf(buf, "Owner");
+		buf = "Owner";
 	else if (level == 3)/*Admin*/
-		sprintf(buf, "Admin");
+		buf = "Admin";
 	else if (level == 4)/*R/O Admin*/
-		sprintf(buf, "Read-Only Admin");
+		buf = "Read-Only Admin";
 	else if (level == 5)/*none*/
-		sprintf(buf, "NONE");
+		buf = "NONE";
 
-	ret = strdup(buf);
-	return ret;
-
+	return eina_stringshare_add(buf);
 }

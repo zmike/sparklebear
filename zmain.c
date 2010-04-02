@@ -6,7 +6,7 @@ gl_sel(void *data, Evas_Object *obj, void *event_info)
 	Elm_Genlist_Item *gitem;
 	const vmitem *vitem;
 	const useritem *uitem;
-	if (streq(zwin->view, "main_vm"))
+	if (zwin->view == zwin->zmain->view)
 	{
 		gitem = elm_genlist_selected_item_get(zwin->zmain->list);
 		vitem = elm_genlist_item_data_get(gitem);
@@ -26,9 +26,9 @@ static void
 logout(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
-	if (strstr(zwin->view, "main_"))
+	if ((zwin->view == zwin->zmain->view) || (zwin->view == zwin->zmain_user->view))
 		zmain_to_zlogin(zwin, NULL, NULL);
-	else if (streq(zwin->view, "info_vm"))
+	else if (zwin->view == zwin->zinfo->vmview)
 		zinfo_to_zlogin(zwin, NULL, NULL);
 }
 
@@ -36,6 +36,7 @@ static void
 zmain_to_zlogin(void *data, Evas_Object *obj, void *event_info)
 {
 	zwin *zwin = data;
+	zmain *zmain;
 	vmitem *vitem;
 	useritem *uitem;
 	int zwidth = 396, zheight = 390;
@@ -61,29 +62,24 @@ zmain_to_zlogin(void *data, Evas_Object *obj, void *event_info)
 	evas_object_del(zwin->zmain->fl);
 //	evas_object_hide(zwin->zmain->box2);
 //	evas_object_del(zwin->zmain->box2);
-	if (streq(zwin->view, "main_vm"))
-	{
-		evas_object_hide(zwin->zmain->bar);
-		evas_object_del(zwin->zmain->bar);
-		evas_object_hide(zwin->zmain->list);
-		evas_object_del(zwin->zmain->list);
-	}
-	else if (streq(zwin->view, "main_user"))
-	{
-		evas_object_hide(zwin->zmain_user->bar);
-		evas_object_del(zwin->zmain_user->bar);
-		evas_object_hide(zwin->zmain_user->list);
-		evas_object_del(zwin->zmain_user->list);
-	}	
+	if (zwin->view == zwin->zmain->view) zmain = zwin->zmain;
+	else if (zwin->view == zwin->zmain_user->view) zmain = zwin->zmain_user;
+
+	evas_object_hide(zmain->bar);
+	evas_object_del(zmain->bar);
+	evas_object_hide(zmain->list);
+	evas_object_del(zmain->list);
+
 	evas_object_hide(zwin->zmain->box);
 	evas_object_del(zwin->zmain->box);
-	if (streq(zwin->view, "main_vm"))
+	if (zwin->view == zwin->zmain->view)
 		EINA_LIST_FREE(zwin->elist, vitem)
 			free_vmitem(vitem);
-	else if (streq(zwin->view, "main_user"))
+	else if (zwin->view == zwin->zmain_user->view)
 		EINA_LIST_FREE(zwin->elist, uitem)
 			free_useritem(uitem);
-	sprintf(zwin->view, "login");
+
+	zwin->view = zwin->zlogin->view;
 	zwin->elist = NULL;
 	eina_list_free(zwin->list);
 	zwin->list = NULL;
@@ -95,98 +91,98 @@ zmain_to_zlogin(void *data, Evas_Object *obj, void *event_info)
 static void
 zmain_vm_keybind(void *data, Evas_Event_Key_Down *key)
 {
-		zwin *zwin = data;
-		Elm_Genlist_Item *gi, *gi2;
-		Eina_List *tb_list, *l;
-		zmain *zmain;
-		Elm_Toolbar_Item *tb;
+	zwin *zwin = data;
+	Elm_Genlist_Item *gi, *gi2;
+	Eina_List *tb_list, *l;
+	zmain *zmain;
+	Elm_Toolbar_Item *tb;
 
-		if (streq(zwin->view, "main_vm"))
-			zmain = zwin->zmain;
-		else if (streq(zwin->view, "main_user"))
-			zmain = zwin->zmain_user;
-		else return;
+	if (zwin->view == zwin->zmain->view)
+		zmain = zwin->zmain;
+	else if (zwin->view == zwin->zmain_user->view)
+		zmain = zwin->zmain_user;
+	else return;
 
-		if (streq(key->keyname, "Escape"))
-		{
-			zmain_to_zlogin(zwin, NULL, NULL);
-			return;
-		}
-		else if (streq(key->keyname, "Left"))
-		{
-			EINA_LIST_FOREACH(zwin->zmain->tb_list, l, tb)
-				if (elm_toolbar_item_selected_get(tb))
-					break;
-			if (!l->prev) tb_list = eina_list_last(zwin->zmain->tb_list);
-			else tb_list = l->prev;
-			tb = tb_list->data;
-			elm_toolbar_item_select(tb);
-			return;
-		}
-		else if (streq(key->keyname, "Right"))
-		{
-			EINA_LIST_FOREACH(zwin->zmain->tb_list, l, tb)
-				if (elm_toolbar_item_selected_get(tb))
-					break;
-			if (!l->next) tb_list = zwin->zmain->tb_list;
-			else tb_list = l->next;
-			tb = tb_list->data;
-			elm_toolbar_item_select(tb);
-			return;
-		}
-		else if (streq(key->keyname, "Down"))
-		{
-			if (!(gi = elm_genlist_selected_item_get(zmain->list)))
-			{
-				if (!(gi = elm_genlist_first_item_get(zmain->list)))
-					return;
-				elm_genlist_item_selected_set(gi, 1);
-			}
-			else
-			{
-				if (!(gi2 = elm_genlist_item_next_get(gi)))
-					return;
-				elm_genlist_item_selected_set(gi2, 1);
-				elm_genlist_item_bring_in(gi2);
-			}
-		}
-		else if (streq(key->keyname, "Up"))
-		{
-			if (!(gi = elm_genlist_selected_item_get(zmain->list)))
-			{
-				if (!(gi = elm_genlist_first_item_get(zmain->list)))
-					return;
-				elm_genlist_item_selected_set(gi, 1);
-			}
-			else
-			{
-				if (!(gi2 = elm_genlist_item_prev_get(gi)))
-					return;
-				elm_genlist_item_selected_set(gi2, 1);
-				elm_genlist_item_bring_in(gi2);
-			}
-		}
-		else if (streq(key->keyname, "Home"))
+	if (streq(key->keyname, "Escape"))
+	{
+		zmain_to_zlogin(zwin, NULL, NULL);
+		return;
+	}
+	else if (streq(key->keyname, "Left"))
+	{
+		EINA_LIST_FOREACH(zwin->zmain->tb_list, l, tb)
+			if (elm_toolbar_item_selected_get(tb))
+				break;
+		if (!l->prev) tb_list = eina_list_last(zwin->zmain->tb_list);
+		else tb_list = l->prev;
+		tb = tb_list->data;
+		elm_toolbar_item_select(tb);
+		return;
+	}
+	else if (streq(key->keyname, "Right"))
+	{
+		EINA_LIST_FOREACH(zwin->zmain->tb_list, l, tb)
+			if (elm_toolbar_item_selected_get(tb))
+				break;
+		if (!l->next) tb_list = zwin->zmain->tb_list;
+		else tb_list = l->next;
+		tb = tb_list->data;
+		elm_toolbar_item_select(tb);
+		return;
+	}
+	else if (streq(key->keyname, "Down"))
+	{
+		if (!(gi = elm_genlist_selected_item_get(zmain->list)))
 		{
 			if (!(gi = elm_genlist_first_item_get(zmain->list)))
 				return;
 			elm_genlist_item_selected_set(gi, 1);
-			elm_genlist_item_bring_in(gi);
 		}
-		else if (streq(key->keyname, "End"))
+		else
 		{
-			if (!(gi = elm_genlist_last_item_get(zmain->list)))
+			if (!(gi2 = elm_genlist_item_next_get(gi)))
+				return;
+			elm_genlist_item_selected_set(gi2, 1);
+			elm_genlist_item_bring_in(gi2);
+		}
+	}
+	else if (streq(key->keyname, "Up"))
+	{
+		if (!(gi = elm_genlist_selected_item_get(zmain->list)))
+		{
+			if (!(gi = elm_genlist_first_item_get(zmain->list)))
 				return;
 			elm_genlist_item_selected_set(gi, 1);
-			elm_genlist_item_bring_in(gi);
 		}
-		else if (streq(key->keyname, "Return") || streq(key->keyname, "KP_Enter"))
+		else
 		{
-			if (streq(zwin->view, "main_vm"))
-				vm_info_cb(zwin, NULL, NULL);
-			else if (streq(zwin->view, "main_user"))
-				user_info_cb(zwin, NULL, NULL);
+			if (!(gi2 = elm_genlist_item_prev_get(gi)))
+				return;
+			elm_genlist_item_selected_set(gi2, 1);
+			elm_genlist_item_bring_in(gi2);
 		}
+	}
+	else if (streq(key->keyname, "Home"))
+	{
+		if (!(gi = elm_genlist_first_item_get(zmain->list)))
+			return;
+		elm_genlist_item_selected_set(gi, 1);
+		elm_genlist_item_bring_in(gi);
+	}
+	else if (streq(key->keyname, "End"))
+	{
+		if (!(gi = elm_genlist_last_item_get(zmain->list)))
+			return;
+		elm_genlist_item_selected_set(gi, 1);
+		elm_genlist_item_bring_in(gi);
+	}
+	else if (streq(key->keyname, "Return") || streq(key->keyname, "KP_Enter"))
+	{
+		if (zwin->view == zwin->zmain->view)
+			vm_info_cb(zwin, NULL, NULL);
+		else if (zwin->view == zwin->zmain_user->view)
+			user_info_cb(zwin, NULL, NULL);
+	}
 }
 
 static void zmain_vm_view(void *data, Evas_Object *obj, void *event_info)
@@ -194,7 +190,7 @@ static void zmain_vm_view(void *data, Evas_Object *obj, void *event_info)
 	zwin *zwin = data;
 	useritem *uitem;
 
-	if (streq(zwin->view, "main_vm") || streq(zwin->view, "login"))
+	if ((zwin->view == zwin->zmain->view) || (zwin->view == zwin->zlogin->view))
 		return;
 	
 	create_zmain_vm(zwin);
@@ -204,7 +200,7 @@ static void zmain_vm_view(void *data, Evas_Object *obj, void *event_info)
 	ecore_timer_del(zwin->timerget);
 
 	elm_flip_go(zwin->zmain->fl, ELM_FLIP_ROTATE_Y_CENTER_AXIS);
-	if (streq(zwin->view, "main_user"))
+	if (zwin->view == zwin->zmain_user->view)
 	{
 		evas_object_hide(zwin->zmain_user->box2);
 		evas_object_del(zwin->zmain_user->box2);
@@ -215,7 +211,7 @@ static void zmain_vm_view(void *data, Evas_Object *obj, void *event_info)
 		zwin->list = NULL;
 		
 	}
-	else if (streq(zwin->view, "info_vm"))
+	else if (zwin->view == zwin->zinfo->vmview)
 	{
 		evas_object_hide(zwin->zinfo->frame);
 		evas_object_hide(zwin->zinfo->hbox);
@@ -223,7 +219,7 @@ static void zmain_vm_view(void *data, Evas_Object *obj, void *event_info)
 	}
 	zmain_job_getvms(zwin);
 	zwin->timerget = ecore_timer_add(zwin->vmtimer, zmain_job_getvms, zwin);
-	sprintf(zwin->view, "main_vm");
+	zwin->view = zwin->zmain->view;
 }
 
 static void zmain_user_view(void *data, Evas_Object *obj, void *event_info)
@@ -231,12 +227,12 @@ static void zmain_user_view(void *data, Evas_Object *obj, void *event_info)
 	zwin *zwin = data;
 	vmitem *vitem;
 
-	if (streq(zwin->view, "main_user") || streq(zwin->view, "login"))
+	if ((zwin->view == zwin->zmain_user->view) || (zwin->view == zwin->zlogin->view))
 		return;
 
 	
 	create_zmain_user(zwin);
-	if (strstr(zwin->view, "info"))
+	if (zwin->view == zwin->zinfo->vmview)
 		elm_flip_content_front_set(zwin->zmain->fl, zwin->zmain_user->box2);
 	elm_flip_content_back_set(zwin->zmain->fl, zwin->zmain_user->box2);
 	elm_label_label_set(zwin->zmain->status, "Fetching users...");
@@ -244,7 +240,7 @@ static void zmain_user_view(void *data, Evas_Object *obj, void *event_info)
 	ecore_timer_del(zwin->timerget);
 
 	elm_flip_go(zwin->zmain->fl, ELM_FLIP_ROTATE_Y_CENTER_AXIS);
-	if (streq(zwin->view, "main_vm"))
+	if (zwin->view == zwin->zmain->view)
 	{
 		evas_object_hide(zwin->zmain->box2);
 		evas_object_del(zwin->zmain->box2);
@@ -254,7 +250,7 @@ static void zmain_user_view(void *data, Evas_Object *obj, void *event_info)
 		eina_list_free(zwin->list);
 		zwin->list = NULL;
 	}
-	else if (streq(zwin->view, "info_vm"))
+	else if (zwin->view == zwin->zinfo->vmview)
 	{
 		evas_object_hide(zwin->zinfo->frame);
 		evas_object_hide(zwin->zinfo->hbox);
@@ -262,7 +258,7 @@ static void zmain_user_view(void *data, Evas_Object *obj, void *event_info)
 	}
 	zmain_job_getusers(zwin);
 	zwin->timerget = ecore_timer_add(zwin->usertimer, zmain_job_getusers, zwin);
-	sprintf(zwin->view, "main_user");
+	zwin->view = zwin->zmain_user->view;
 }
 
 static void create_zmain_vm(void *data)
@@ -427,27 +423,24 @@ static void create_zmain(void *data)
 	x = evas_object_key_grab(zwin->win, "End", 0, 0, 1);
 }
 
-static void zmain_getvms(void *data, zrpc_handle h)
+static void zmain_getvms(void *data, const char *reply)
 {
 	zwin *zwin = data;
 	Eina_List *l, *n, *elist = zwin->elist;
-	char *xmlvms, *charxml;
+	const char *charxml;
 	zrpc_vm *vm;
 	xmlNode *r;
 	vmitem *update, *vmitem;
 	int vmfound;
 
-	if (!streq(zwin->view, "main_vm"))
+	if (zwin->view != zwin->zmain->view)
 	{
-		free(zwin->zcon->recbuf[h]);
-		zwin->zcon->recbuf[h] = NULL;
+		eina_stringshare_del(reply);
 		return;
 	}
 	
-	xmlvms = zwin->zcon->recbuf[h];
-	charxml = strdup(strchr(xmlvms, '<'));
-	free(xmlvms);
-	zwin->zcon->recbuf[h] = NULL;
+	charxml = eina_stringshare_add(strchr(reply, '<'));
+	eina_stringshare_del(reply);
 	
 	r = parsechar(charxml);
 	l = zwin->list;
@@ -476,7 +469,7 @@ static void zmain_getvms(void *data, zrpc_handle h)
 			vmfound = 0;
 			/*can't use list_data_find because pointers are different :(*/
 			EINA_LIST_FOREACH(zwin->elist, l, update)
-				if (streq(update->uuid, vm->uuid))
+				if (update->uuid == vm->uuid)
 				{
 					vmfound = 1;
 					break;
@@ -484,7 +477,7 @@ static void zmain_getvms(void *data, zrpc_handle h)
 			if (vmfound)
 				EINA_LIST_FOREACH(zwin->elist, l, update)
 				{	/*if uuid exists, update vm*/
-					if (streq(update->uuid, vm->uuid))
+					if (update->uuid == vm->uuid)
 					{
 #ifdef DEBUG
 						printf("GENLIST: Updating vm with uuid: %s\n", update->uuid);
@@ -502,8 +495,8 @@ static void zmain_getvms(void *data, zrpc_handle h)
 				printf("GENLIST: Adding new vm:\n\tuuid {%s}\n\tname {%s}\n", vm->uuid, vm->name);
 #endif
 				vmitem = new_vmitem();
-				vmitem->uuid = strdup(vm->uuid);
-				vmitem->state = strdup(vm->state);
+				vmitem->uuid = eina_stringshare_ref(vm->uuid);
+				vmitem->state = eina_stringshare_ref(vm->state);
 				vmitem->vm = vm;
 				vmitem->item = elm_genlist_item_append(zwin->zmain->list, zwin->zmain->itc,
                                       (void *)vmitem /* item data */,
@@ -524,8 +517,8 @@ static void zmain_getvms(void *data, zrpc_handle h)
 				printf("GENLIST: Adding new vm:\n\tuuid {%s}\n\tname {%s}\n", vm->uuid, vm->name);
 #endif
 				vmitem = new_vmitem();
-				vmitem->uuid = strdup(vm->uuid);
-				vmitem->state = strdup(vm->state);
+				vmitem->uuid = eina_stringshare_ref(vm->uuid);
+				vmitem->state = eina_stringshare_ref(vm->state);
 				vmitem->vm = vm;
 				vmitem->item = elm_genlist_item_append(zwin->zmain->list, zwin->zmain->itc,
 					(void *)vmitem /* item data */,
@@ -541,7 +534,7 @@ static void zmain_getvms(void *data, zrpc_handle h)
 	{
 		vmfound = 0;
 		EINA_LIST_FOREACH(zwin->list, n, vm)
-			if (streq(update->uuid, vm->uuid))
+			if (update->uuid == vm->uuid)
 			{
 				vmfound = 1;
 				break;
@@ -559,7 +552,7 @@ static void zmain_getvms(void *data, zrpc_handle h)
 	evas_object_show(zwin->zmain->notify);
 }
 
-static void zmain_getusers(void *data, zrpc_handle h)
+static void zmain_getusers(void *data, const char *reply)
 {
 	zrpc_meta_struct *meta;
 	zwin *zwin;
@@ -572,7 +565,7 @@ static void zmain_getusers(void *data, zrpc_handle h)
 	if (!(zwin = meta->cbd)) return;
 	if (!(users = meta->extra)) return;
 
-	if (!streq(zwin->view, "main_user")) return;
+	if (zwin->view != zwin->zmain_user->view) return;
 	elist = zwin->elist;
 	zwin->list = users;
 	
@@ -611,13 +604,13 @@ static void zmain_getusers(void *data, zrpc_handle h)
 				}
 			else
 			{
-#ifdef DEBUG
-				printf("GENLIST: Not found!\n");
-				printf("GENLIST: Adding new user:\n\tuid {%d}\n\tname {%s}\n", user->uid, user->name);
-#endif
 				useritem = new_useritem();
 				useritem->uid = user->uid;
 				useritem->user = user;
+#ifdef DEBUG
+				printf("GENLIST: Not found!\n");
+				printf("GENLIST: Adding new user:\n\tuid {%d}\n\tname {%s}\n", useritem->uid, useritem->user->name);
+#endif
 				useritem->item = elm_genlist_item_append(zwin->zmain_user->list, zwin->zmain_user->itc,
                                       (void *)useritem /* item data */,
                                       NULL/* parent */,
@@ -708,8 +701,9 @@ char *gl_vm_label_get(const void *data, Evas_Object *obj, const char *part)
 {
 	const vmitem *item = data;
 	const zrpc_vm *vm;
+	const char *type;
 	char buf[256];
-	char *type;
+	
 
 	vm = item->vm;
 	if (streq(vm->type, "para"))
@@ -753,7 +747,7 @@ Evas_Object *gl_vm_icon_get(const void *data, Evas_Object *obj, const char *part
 {
 	const vmitem *item = data;
 	const zrpc_vm *vm;
-	char *buf;
+	const char *buf;
 	Evas_Object *ic;
 
 	vm = item->vm;
@@ -769,7 +763,7 @@ printf("GENLIST: setting icon for %s to %s\n", part, buf);
 #endif
 
 	elm_icon_file_set(ic, buf, NULL);
-	free(buf);
+	eina_stringshare_del(buf);
 	evas_object_size_hint_aspect_set(ic, EVAS_ASPECT_CONTROL_VERTICAL, 1, 1);
 	return ic;
 }
@@ -779,33 +773,29 @@ Evas_Object *gl_user_icon_get(const void *data, Evas_Object *obj, const char *pa
 
 	const useritem *item = data;
 	const zrpc_user *user;
-	char *buf;
+	const char *buf;
 	Evas_Object *ic;
 
 	user = item->user;
 	ic = elm_icon_add(obj);
 	if (streq(part, "elm.swallow.icon"))
 	{
-		buf = get_access_icon(user->uid);
+		buf = get_access_icon(user->type);
 		elm_icon_file_set(ic, buf, NULL);
-		free(buf);
+		eina_stringshare_del(buf);
 	}
+
 /*
 	else if (streq(part, "elm.swallow.end"))
-	{
 		buf = get_lang_icon(user->language);
-		elm_icon_file_set(ic, buf, NULL);
-		free(buf);
-	}
 */
 
 #ifdef EDEBUG
 printf("GENLIST: setting icon for %s to %s\n", part, buf);
 #endif
 
+
 	evas_object_size_hint_aspect_set(ic, EVAS_ASPECT_CONTROL_VERTICAL, 1, 1);
 	return ic;
-
-	return NULL;
 }
 
