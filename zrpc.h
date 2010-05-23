@@ -92,16 +92,16 @@ typedef struct _zrpc_disk {
 	const char *ext_dev;
 	const char *mode;
 	const char *type;
+	const char *partition_type;
+	const char *mapped_dev;
 	int ooreq;
 	int rdreq;
 	int wrreq;
 	int num_sectors;
 	int size_sector;
-	const char *partition_type;
 	int start_sector;
 	int block_size;
 	int free;
-	const char *mapped_dev;
 } zrpc_disk;
 
 typedef struct _zrpc_vif {
@@ -111,14 +111,14 @@ typedef struct _zrpc_vif {
 	const char *script;
 	const char *type;
 
-	Eina_Bool loopback;
-	Eina_Bool connected;
-	Eina_Bool promisc;
-
 	const char *ip;
 	const char *netmask;
 	const char *gateway;
 	const char *broadcast;
+
+	int loopback;
+	int connected;
+	int promisc;
 		
 	int mtu;
 

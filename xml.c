@@ -115,17 +115,17 @@ xml_parse_user(xmlNode *node)
 		else
 			value = (char*)seek->children->content;
 
-		if (!strcmp(name, "uid"))
+		if ((user->uid < 0) && (!strcmp(name, "uid")))
 			user->uid = atoi(value);
-		else if (!strcmp(name, "name"))
+		else if ((!user->name) && (!strcmp(name, "name")))
 			user->name = eina_stringshare_add(value);
-		else if (!strcmp(name, "email"))
+		else if ((!user->email) && (!strcmp(name, "email")))
 			user->email = eina_stringshare_add(value);
-		else if (!strcmp(name, "active"))
+		else if ((user->active < 0) && (!strcmp(name, "active")))
 			user->active = atoi(value);
-		else if (!strcmp(name, "type"))
+		else if ((user->type < 0) && (!strcmp(name, "type")))
 			user->type = atoi(value);
-		else if (!strcmp(name, "language"))
+		else if ((!user->language) && (!strcmp(name, "language")))
 			user->language = eina_stringshare_add(value);
 
 		node2 = xml_safenext(node2->next);
@@ -172,51 +172,51 @@ xml_parse_vm(xmlNode *node)
 			value = (char*)seek->children->content;
 
 
-		if (!strcmp(name, "name"))
+		if ((!vm->name) && (!strcmp(name, "name")))
 			vm->name = eina_stringshare_add(value);
-		else if (!strcmp(name, "uuid"))
+		else if ((!vm->uuid) && (!strcmp(name, "uuid")))
 			vm->uuid = eina_stringshare_add(value);
-		else if (!strcmp(name, "puuid"))
+		else if ((!vm->puuid) && (!strcmp(name, "puuid")))
 			vm->puuid = eina_stringshare_add(value);
-		else if (!strcmp(name, "type"))
+		else if ((!vm->type) && (!strcmp(name, "type")))
 			vm->type = eina_stringshare_add(value);
-		else if (!strcmp(name, "os"))
+		else if ((!vm->os) && (!strcmp(name, "os")))
 			vm->os = eina_stringshare_add(value);
-		else if (!strcmp(name, "id"))
+		else if ((vm->id < 0) && (!strcmp(name, "id")))
 			vm->id = atoi(value);
-		else if (!strcmp(name, "kernel"))
+		else if ((!vm->kernel) && (!strcmp(name, "kernel")))
 			vm->kernel = eina_stringshare_add(value);
-		else if (!strcmp(name, "ramdisk"))
+		else if ((!vm->ramdisk) && (!strcmp(name, "ramdisk")))
 			vm->ramdisk = eina_stringshare_add(value);
-		else if (!strcmp(name, "cmdline"))
+		else if ((!vm->cmdline) && (!strcmp(name, "cmdline")))
 			vm->cmdline = eina_stringshare_add(value);
-		else if (!strcmp(name, "on_reboot"))
+		else if ((!vm->on_reboot) && (!strcmp(name, "on_reboot")))
 			vm->on_reboot = eina_stringshare_add(value);
-		else if (!strcmp(name, "on_poweroff"))
+		else if ((!vm->on_poweroff) && (!strcmp(name, "on_poweroff")))
 			vm->on_poweroff = eina_stringshare_add(value);
-		else if (!strcmp(name, "on_crash"))
+		else if ((!vm->on_crash) && (!strcmp(name, "on_crash")))
 			vm->on_crash = eina_stringshare_add(value);
-		else if (!strcmp(name, "mem"))
+		else if ((vm->mem < 0) && (!strcmp(name, "mem")))
 			vm->mem = atoi(value);
-		else if (!strcmp(name, "maxmem"))
+		else if ((vm->maxmem < 0) && (!strcmp(name, "maxmem")))
 			vm->maxmem = atoi(value);
-		else if (!strcmp(name, "vcpus"))
+		else if ((vm->vcpus < 0) && (!strcmp(name, "vcpus")))
 			vm->vcpus = atoi(value);
-		else if (!strcmp(name, "cpupct"))
+		else if ((vm->cpupct < 0) && (!strcmp(name, "cpupct")))
 			vm->cpupct = atof(value);
-		else if (!strcmp(name, "cputime"))
+		else if ((vm->cputime < 0) && (!strcmp(name, "cputime")))
 			vm->cputime = atof(value);
-		else if (!strcmp(name, "uptime"))
+		else if ((vm->uptime < 0) && (!strcmp(name, "uptime")))
 			vm->uptime = atoi(value);
-		else if (!strcmp(name, "vncport"))
+		else if ((vm->vncport < 0) && (!strcmp(name, "vncport")))
 			vm->vncport = atoi(value);
-		else if (!strcmp(name, "vncpasswd"))
+		else if ((!strcmp(name, "vncpasswd")))
 			vm->vncpasswd = eina_stringshare_add(value);
-		else if (!strcmp(name, "state"))
+		else if ((!vm->state) && (!strcmp(name, "state")))
 			vm->state = eina_stringshare_add(value);
-		else if (!strcmp(name, "numvbds"))
+		else if ((vm->numvbds < 0) && (!strcmp(name, "numvbds")))
 			vm->numvbds = atoi(value);
-		else if (!strcmp(name, "disks"))
+		else if ((!vm->disks) && (!strcmp(name, "disks")))
 		{
 			node3 = xml_safenext(node3->next);
 
@@ -252,33 +252,33 @@ xml_parse_vm(xmlNode *node)
 						value2 = (char*)seek2->children->content;
 
 
-					if (!strcmp(name, "int_dev"))
+					if ((!disk->int_dev) && (!strcmp(name, "int_dev")))
 						disk->int_dev = eina_stringshare_add(value2);
-					else if (!strcmp(name, "ext_dev"))
+					else if ((!disk->ext_dev) && (!strcmp(name, "ext_dev")))
 						disk->ext_dev = eina_stringshare_add(value2);
-					else if (!strcmp(name, "mode"))
+					else if ((!disk->mode) && (!strcmp(name, "mode")))
 						disk->mode = eina_stringshare_add(value2);
-					else if (!strcmp(name, "type"))
+					else if ((!disk->type) && (!strcmp(name, "type")))
 						disk->type = eina_stringshare_add(value2);
-					else if (!strcmp(name, "ooreq"))
+					else if ((disk->ooreq < 0) && (!strcmp(name, "ooreq")))
 						disk->ooreq = atoi(value2);
-					else if (!strcmp(name, "rdreq"))
+					else if ((disk->rdreq < 0) && (!strcmp(name, "rdreq")))
 						disk->rdreq = atoi(value2);
-					else if (!strcmp(name, "wrreq"))
+					else if ((disk->wrreq < 0) && (!strcmp(name, "wrreq")))
 						disk->wrreq = atoi(value2);
-					else if (!strcmp(name, "num_sectors"))
+					else if ((disk->num_sectors < 0) && (!strcmp(name, "num_sectors")))
 						disk->num_sectors = atoi(value2);
-					else if (!strcmp(name, "size_sector"))
+					else if ((disk->size_sector < 0) && (!strcmp(name, "size_sector")))
 						disk->size_sector = atoi(value2);
-					else if (!strcmp(name, "partition_type"))
+					else if ((!disk->partition_type) && (!strcmp(name, "partition_type")))
 						disk->partition_type = eina_stringshare_add(value2);
-					else if (!strcmp(name, "start_sector"))
+					else if ((disk->start_sector < 0) && (!strcmp(name, "start_sector")))
 						disk->start_sector = atoi(value2);
-					else if (!strcmp(name, "block_size"))
+					else if ((disk->block_size < 0) && (!strcmp(name, "block_size")))
 						disk->block_size = atoi(value2);
-					else if (!strcmp(name, "free"))
+					else if ((disk->free < 0) && (!strcmp(name, "free")))
 						disk->free = atoi(value2);
-					else if (!strcmp(name, "mapped_dev"))
+					else if ((!disk->mapped_dev) && (!strcmp(name, "mapped_dev")))
 						disk->mapped_dev = eina_stringshare_add(value2);
 
 					node4 = xml_safenext(node4->next);
@@ -288,13 +288,13 @@ xml_parse_vm(xmlNode *node)
 			}
 
 		}
-		else if (!strcmp(name, "numnets"))
+		else if ((vm->numnets < 0) && (!strcmp(name, "numnets")))
 			vm->numnets = atoi(value);
-		else if (!strcmp(name, "rxbw"))
+		else if ((vm->rxbw < 0) && (!strcmp(name, "rxbw")))
 			vm->rxbw = atoi(value);
-		else if (!strcmp(name, "txbw"))
+		else if ((vm->txbw < 0) && (!strcmp(name, "txbw")))
 			vm->txbw = atoi(value);
-		else if (!strcmp(name, "vifs"))
+		else if ((!vm->vifs) && (!strcmp(name, "vifs")))
 		{
 			node3 = xml_safenext(node3->next);
 
@@ -329,49 +329,49 @@ xml_parse_vm(xmlNode *node)
 						value2 = (char*)seek2->children->content;
 
 
-					if (!strcmp(name, "name"))
+					if ((!vif->name) && (!strcmp(name, "name")))
 						vif->name = eina_stringshare_add(value2);
-					else if (!strcmp(name, "mac"))
+					else if ((!vif->mac) && (!strcmp(name, "mac")))
 						vif->mac = eina_stringshare_add(value2);
-					else if (!strcmp(name, "bridge"))
+					else if ((!vif->bridge) && (!strcmp(name, "bridge")))
 						vif->bridge = eina_stringshare_add(value2);
-					else if (!strcmp(name, "script"))
+					else if ((!vif->script) && (!strcmp(name, "script")))
 						vif->script = eina_stringshare_add(value2);
-					else if (!strcmp(name, "type"))
+					else if ((!vif->type) && (!strcmp(name, "type")))
 						vif->type = eina_stringshare_add(value2);
-					else if (!strcmp(name, "loopback"))
-						vif->loopback = *(Eina_Bool*)value2;
-					else if (!strcmp(name, "connected"))
-						vif->connected = *(Eina_Bool*)value2;
-					else if (!strcmp(name, "promisc"))
-						vif->promisc = *(Eina_Bool*)value2;
-					else if (!strcmp(name, "ip"))
+					else if ((vif->loopback < 0) && (!strcmp(name, "loopback")))
+						vif->loopback = atoi(value2);
+					else if ((vif->connected < 0) && (!strcmp(name, "connected")))
+						vif->connected = atoi(value2);
+					else if ((vif->promisc < 0) && (!strcmp(name, "promisc")))
+						vif->promisc = atoi(value2);
+					else if ((!vif->ip) && (!strcmp(name, "ip")))
 						vif->ip = eina_stringshare_add(value2);
-					else if (!strcmp(name, "netmask"))
+					else if ((!vif->netmask) && (!strcmp(name, "netmask")))
 						vif->netmask = eina_stringshare_add(value2);
-					else if (!strcmp(name, "gateway"))
+					else if ((!vif->gateway) && (!strcmp(name, "gateway")))
 						vif->gateway = eina_stringshare_add(value2);
-					else if (!strcmp(name, "broadcast"))
+					else if ((!vif->broadcast) && (!strcmp(name, "broadcast")))
 						vif->broadcast = eina_stringshare_add(value2);
-					else if (!strcmp(name, "mtu"))
+					else if ((vif->mtu < 0) && (!strcmp(name, "mtu")))
 						vif->mtu = atoi(value2);
-					else if (!strcmp(name, "txpackets"))
+					else if ((vif->txpackets < 0) && (!strcmp(name, "txpackets")))
 						vif->txpackets = atof(value2);
-					else if (!strcmp(name, "txbytes"))
+					else if ((vif->txbytes < 0) && (!strcmp(name, "txbytes")))
 						vif->txbytes = atof(value2);
-					else if (!strcmp(name, "txdrop"))
+					else if ((vif->txdrop < 0) && (!strcmp(name, "txdrop")))
 						vif->txdrop = atof(value2);
-					else if (!strcmp(name, "txerr"))
+					else if ((vif->txerr < 0) && (!strcmp(name, "txerr")))
 						vif->txerr = atof(value2);
-					else if (!strcmp(name, "rxpackets"))
+					else if ((vif->rxpackets < 0) && (!strcmp(name, "rxpackets")))
 						vif->rxpackets = atof(value2);
-					else if (!strcmp(name, "rxbytes"))
+					else if ((vif->rxbytes < 0) && (!strcmp(name, "rxbytes")))
 						vif->rxbytes = atof(value2);
-					else if (!strcmp(name, "rxdrop"))
+					else if ((vif->rxdrop < 0) && (!strcmp(name, "rxdrop")))
 						vif->rxdrop = atof(value2);
-					else if (!strcmp(name, "rxerr"))
+					else if ((vif->rxerr < 0) && (!strcmp(name, "rxerr")))
 						vif->rxerr = atof(value2);
-					else if (!strcmp(name, "collisions"))
+					else if ((vif->collisions < 0) && (!strcmp(name, "collisions")))
 						vif->collisions = atof(value2);
 					node4 = xml_safenext(node4->next);
 				}

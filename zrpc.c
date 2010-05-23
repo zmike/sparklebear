@@ -471,6 +471,15 @@ zrpc_disk *zdisk_new()
 	if (!(new = calloc(1, sizeof(zrpc_disk))))
 		return NULL;
 
+	new->ooreq = -1;
+	new->rdreq = -1;
+	new->wrreq = -1;
+	new->num_sectors = -1;
+	new->size_sector = -1;
+	new->start_sector = -1;
+	new->block_size = -1;
+	new->free = -1;
+
 	return new;
 }
 
@@ -494,6 +503,20 @@ zrpc_vif *zvif_new()
 	zrpc_vif *new;
 	if (!(new = calloc(1, sizeof(zrpc_vif))))
 		return NULL;
+
+	new->loopback = -1;
+	new->connected = -1;
+	new->promisc = -1;
+	new->mtu = -1;
+	new->txpackets = -1;
+	new->txbytes = -1;
+	new->txdrop = -1;
+	new->txerr = -1;
+	new->rxpackets = -1;
+	new->rxbytes = -1;
+	new->rxdrop = -1;
+	new->rxerr = -1;
+	new->collisions = -1;
 
 	return new;
 }
@@ -520,7 +543,20 @@ zrpc_vm *zvm_new()
 	zrpc_vm *new;
 	if (!(new = calloc(1, sizeof(zrpc_vm))))
 		return NULL;
-	
+
+        new->id = -1;
+	new->mem = -1;
+	new->maxmem = -1;
+	new->vcpus = -1;
+	new->cpupct = -1;
+	new->cputime = -1;
+	new->uptime = -1;
+	new->vncport = -1;
+        new->numvbds = -1;
+	new->numnets = -1;
+	new->rxbw = -1;
+	new->txbw = -1;
+
 	return new;
 }
 
@@ -559,6 +595,10 @@ zrpc_user *zuser_new()
         
 	if (!(new = calloc(1, sizeof(zrpc_user))))
 		return NULL;
+
+        new->uid = -1;
+        new->active = -1;
+        new->type = -1;
 
 	return new;
 }
