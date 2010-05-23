@@ -5,14 +5,15 @@
  * so error checking is possible.  I choose not to here because it's pedantic and tedious.
  */
 
-//#define DEBUG 1 /*enables some general parsing debug info*/
+#define DEBUG 1 /*enables some general parsing debug info*/
 //#define XML_DEBUG 1/*shows full rpc call send/receive*/
 #include <stdio.h>
 #include "zrpc.h"
-#include "zrpc.c"
+#include "zrpc_functions.h"
+#include "xml.h"
 
 /*after logout completes*/
-void cleanup(zrpc_con *zcon, const char *reply)
+void cleanup(const char *reply, zrpc_con *zcon)
 {
 	xmlNode *r;
 
@@ -46,7 +47,7 @@ void print_uinfos(const char *reply, void *data)
 }
 
 /*second callback, parses getVMsFull*/
-void print_infos(zrpc_con *zcon, const char *reply)
+void print_infos(const char *reply, zrpc_con *zcon)
 {
 	/*seek to the xml data*/
 	Eina_List *vms, *l;
@@ -70,7 +71,7 @@ void print_infos(zrpc_con *zcon, const char *reply)
 }
 
 /*the first callback, called after login response has been received*/
-void post(zrpc_con *zcon, const char *reply)
+void post(const char *reply, zrpc_con *zcon)
 {/*parameters are a zcon handle, and the handle number*/
 	xmlNode *r;
 
@@ -81,7 +82,7 @@ void post(zrpc_con *zcon, const char *reply)
 	 *all parse functions free the node passed to them
 	 */
 	if (xml_parse_int(r)) /*if login succeeded*/
-		zrpc_VM_getVMsFull(zcon, (void*)print_infos, zcon);
+		zrpc_VM_getAllFull(zcon, (void*)print_infos, zcon);
 	else
 	{
 		printf("Login failed!\n");

@@ -1,8 +1,8 @@
 /*zrpc efl c bindings xml functions
  *2010 Mike Blumenkrantz*/
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#include "zrpc.h"
+#include "xml.h"
 
 /* always use this when checking node->next or node->children
  * to avoid random XML_TEXT_NODEs from formatting
@@ -49,7 +49,7 @@ xml_parse_users(xmlNode *node)
 
 	node2 = node;
 	if (!strcmp((char*)node2->name, "methodResponse"))
-		while (!!strcmp((char*)node2->name, "data"))
+		while (strcmp((char*)node2->name, "data"))
 		{
 			/* seek to start of user array */
 			node2 = xml_safenext(node2->children);
@@ -65,7 +65,7 @@ xml_parse_users(xmlNode *node)
 		node3 = xml_safenext(node3->next);
 	}
 
-	if (!(users = calloc(usercount, sizeof(int))))
+	if (!(users = calloc(usercount + 1, sizeof(int))))
 		return 0;
 	usercount = 0;
 	while (node2)
@@ -76,6 +76,7 @@ xml_parse_users(xmlNode *node)
 
 		node2 = xml_safenext(node2->next);
 	}
+        users[usercount] = -1;
 	node2 = node3 = NULL;
 	if (!strcmp((char*)node->name, "methodResponse"))
 		xmlFreeNode(node);
@@ -93,7 +94,7 @@ xml_parse_user(xmlNode *node)
 
 	node2 = node;
 	if (!strcmp((char*)node2->name, "methodResponse"))
-		while (!!strcmp((char*)node2->name, "struct"))
+		while (strcmp((char*)node2->name, "struct"))
 		{
 			/* seek to start of user struct */
 			node2 = xml_safenext(node2->children);
@@ -149,7 +150,7 @@ xml_parse_vm(xmlNode *node)
 
 	node2 = node;
 	if (!strcmp((char*)node2->name, "methodResponse"))
-		while (!!strcmp((char*)node2->name, "struct"))
+		while (strcmp((char*)node2->name, "struct"))
 		{
 			/* seek to start of vm struct */
 			node2 = xml_safenext(node2->children);
@@ -220,7 +221,7 @@ xml_parse_vm(xmlNode *node)
 			node3 = xml_safenext(node3->next);
 
 			/* seek to disk array */
-			while (!!strcmp((char*)node3->name, "data"))
+			while (strcmp((char*)node3->name, "data"))
 				node3 = xml_safenext(node3->children);
 
 			if (!(node3 = xml_safenext(node3->children)))
@@ -298,7 +299,7 @@ xml_parse_vm(xmlNode *node)
 			node3 = xml_safenext(node3->next);
 
 			/* seek to vif array */
-			while (!!strcmp((char*)node3->name, "data"))
+			while (strcmp((char*)node3->name, "data"))
 				node3 = xml_safenext(node3->children);
 
 			if (!(node3 = xml_safenext(node3->children)))
@@ -450,7 +451,12 @@ xml_parse_vmsfull(xmlNode *node)
 //	void *t = NULL;
 	zrpc_vm *vm;
 	Eina_List *tmp = NULL;
+        double time;
 
+
+#ifdef DEBUG
+        time = ecore_time_get();
+#endif
 //	if (!(t = eina_list_data_get(vms))) vms = NULL;
 
 	node2 = xml_safenext(node->children);
@@ -458,7 +464,7 @@ xml_parse_vmsfull(xmlNode *node)
 	while (node2)
 	{
 		/* seek to start of array */
-		if (!!strcmp((char*)node2->parent->name, "data"))
+		if (strcmp((char*)node2->parent->name, "data"))
 			node2 = xml_safenext(node2->children);
 		else
 		{
@@ -497,6 +503,9 @@ xml_parse_vmsfull(xmlNode *node)
 	node2 = node3 = NULL;
 	xmlFreeNode(node);
 
+#ifdef DEBUG
+        printf("DEBUG: getvmsfull parsing completed in %f seconds!\n", ecore_time_get() - time);
+#endif
 
 	return tmp;
 }
@@ -509,7 +518,7 @@ xml_parse_xml(const char *charxml)
 	xmlDocPtr doc;
 	xmlNode *root, *root2;
 
-        if (!charxml) return NULL;
+        if (!charxml || !strlen(charxml)) return NULL;
         if (strstr(charxml, "faultCode") && strstr(charxml, "faultString"))
                 return NULL;
 
@@ -530,7 +539,7 @@ xml_parse_xml(const char *charxml)
 
 //adds params up through "params" to a new rpc
 void
-xml_xml_new_call(xmlDocPtr doc, const char *method)
+xml_new_call(xmlDocPtr doc, const char *method)
 {
 	xmlNodePtr methodcall, methodname, params;
 
@@ -543,7 +552,7 @@ xml_xml_new_call(xmlDocPtr doc, const char *method)
 
 //adds a new string param
 void
-xml_xml_new_string(xmlDocPtr doc, const char *string)
+xml_new_string(xmlDocPtr doc, const char *string)
 {
 	xmlNodePtr node, node2, p, v, s;
 
@@ -561,7 +570,7 @@ xml_xml_new_string(xmlDocPtr doc, const char *string)
 
 //adds a new int param
 void
-xml_xml_new_int(xmlDocPtr doc, int i, int array)
+xml_new_int(xmlDocPtr doc, int i, int array)
 {
 	xmlNodePtr node, node2, p, v, s;
 	char i2[13];
@@ -580,7 +589,7 @@ xml_xml_new_int(xmlDocPtr doc, int i, int array)
 }
 
 void
-xml_xml_new_array(xmlDocPtr doc)
+xml_new_array(xmlDocPtr doc)
 {
 	xmlNodePtr node, node2, p, v, a, d;
 

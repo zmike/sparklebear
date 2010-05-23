@@ -1,3 +1,9 @@
+#ifndef XML_H
+#define XML_H
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
 inline xmlNode *xml_safenext(xmlNode *node);
 
 int 		xml_parse_int(xmlNode *node);
@@ -11,3 +17,5 @@ void		xml_new_call(xmlDocPtr doc, const char *method);
 void		xml_new_string(xmlDocPtr doc, const char *string);
 void		xml_new_int(xmlDocPtr doc, int i, int array);
 void		xml_new_array(xmlDocPtr doc);
+
+#endif

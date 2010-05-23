@@ -676,7 +676,7 @@ static void zmain_getusers(const char *reply, void *data)
 static int zmain_job_getvms(void *data)
 {
 	zwin *zwin = data;
-	if (!zrpc_VM_getVMsFull(zwin->zcon, &zmain_getvms, zwin))
+	if (!zrpc_VM_getAllFull(zwin->zcon, &zmain_getvms, zwin))
 		elm_label_label_set(zwin->zmain->status, "Connection failed, retrying");
 	else
 		elm_label_label_set(zwin->zmain->status, "Adding job to refresh vm info...");

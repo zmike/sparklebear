@@ -13,6 +13,10 @@
 #include <Ecore_Con.h>
 #include <Ecore.h>
 #include <ctype.h>
+#include <string.h>
+
+
+typedef int PLATFORM;
 
 typedef int zrpc_handle;
 /*generic callback for every function call*/
@@ -236,5 +240,7 @@ zrpc_vm *zvm_new();
 void zvm_free(zrpc_vm *vm);
 zrpc_user *zuser_new();
 void zuser_free(zrpc_user *user);
+int meta_getUsersFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd);
+int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_cb cb, void *cbd);
 
 #endif

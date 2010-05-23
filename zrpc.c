@@ -2,8 +2,8 @@
  * 2010 Mike Blumenkrantz*/
 
 #include "zrpc.h"
-#include "xml.c"
-
+#include "xml.h"
+#include "zrpc_functions.h"
 
 /*called every time a new connection is made
  * data is the zcon struct passed to the zrpc function
@@ -63,6 +63,7 @@ Content-length: %s\n", itoav);
                 eina_strbuf_append_printf(sbuf, "Cookie: sessid=%s\n", zcon->zcookie);
 
 	eina_strbuf_prepend_printf(zcon->buf[z], "%s\n", eina_strbuf_string_get(sbuf));
+        eina_strbuf_free(sbuf);
 
 #ifdef DEBUG
 	printf("\n\t\tCalling %s @ %s:%d\n", zcon->call[z], zcon->host, zcon->port);
@@ -257,14 +258,14 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 	zcon->cb[z] = cb;
 	zcon->cbd[z] = cbd;
 	doc = xmlNewDoc(BAD_CAST "1.0"); //init the xml document
-	xml_xml_new_call(doc, zcon->call[z]); //set up the doc with the methodcall
+	xml_new_call(doc, zcon->call[z]); //set up the doc with the methodcall
 	if (zcon->params[z])
 	{/*if the params aren't null*/
 		EINA_LIST_FOREACH(zcon->params[z], l, s)
 		/* use eina list for params to have uniform functions */
 		{/*FIXME: add type checking for last couple calls*/
 			if (isalnum((*(char*)s))) /*dereference char* to char and check for non-garbage*/
-				xml_xml_new_string(doc, (char*)s); /*must be string*/
+				xml_new_string(doc, (char*)s); /*must be string*/
 			else /*otherwise int*/
 			{
 				y = (int*)s;
@@ -291,12 +292,12 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 				}
 				if (numints > 1)
 				{
-					xml_xml_new_array(doc);
+					xml_new_array(doc);
 					for (w = 0; w < numints; w++)
-						xml_xml_new_int(doc, y[w], 1);
+						xml_new_int(doc, y[w], 1);
 				}
 				else
-					xml_xml_new_int(doc, y[0], 0);
+					xml_new_int(doc, y[0], 0);
 			}
 		}
 	}
@@ -333,8 +334,6 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 
 }
 
-#include "zrpc_functions.c"
-
 /*for sorting a list of uids*/
 static int uid_sort(const void *a, const void *b)
 {
@@ -348,7 +347,7 @@ static void _collector(const char *reply, void *data)
 {
 	zrpc_meta_struct *meta = data;
 	int it = 0, numusers = meta->num;
-	static int count;
+	static int count, print = 0;
 	zrpc_user *user;
 	xmlNode *r;
 	double timer;
@@ -378,11 +377,15 @@ printf("DEBUG: waiting for %d user infos to come in...\n", numusers);
 	while ((count < numusers) && (ecore_time_get() < (timer+10)))
 	{
 #ifdef DEBUG
-printf("DEBUG: %d of %d have arrived...\n", count, numusers);
+if (print != count)
+{
+        printf("DEBUG: %d of %d have arrived...\n", count, numusers);
+        print++;
+}
 #endif
 		ecore_main_loop_iterate();
 	}
-	count = 0;
+	print = count = 0;
 
 	users = eina_list_sort(users, eina_list_count(users), uid_sort);
 
@@ -412,7 +415,7 @@ static void _getusers(const char *reply, void *data)
 	users = xml_parse_users(r);
 
 	/*count up the users*/
-	for (it = 1; users[it]; it++)
+	for (it = 0; users[it] >= 0; it++)
 		numusers++;
 
 	/*if 0, don't even bother*/
@@ -423,7 +426,6 @@ static void _getusers(const char *reply, void *data)
 	}
 
 	/*increment here if the first user is 0 since we had to skip it to loop before since I'm lazy*/
-	if (users[0] == 0) numusers++;
 #ifdef DEBUG
 	printf("DEBUG: Found %d users\n", numusers);
 #endif
@@ -434,7 +436,7 @@ static void _getusers(const char *reply, void *data)
 #ifdef DEBUG
 		printf("DEBUG: fetching info for user with uid: %d\n", users[it]);
 #endif		/*actually send the request*/
-		zrpc_User_getUserByUID(users[it], zcon, _collector, meta);
+		zrpc_User_getByUID(users[it], zcon, _collector, meta);
 	}/*free the int array*/
 	free(users);
 }
@@ -448,7 +450,7 @@ int meta_getUsersFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 	x->zcon = zcon;
 	x->cbd = cbd;
 
-	if (!zrpc_User_getUsers(zcon, _getusers, x))
+	if (!zrpc_User_getAll(zcon, _getusers, x))
 		return 0;
 		
 	return 1;
