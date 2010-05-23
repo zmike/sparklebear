@@ -1,18 +1,13 @@
 static void
-vm_action_cb(void *data, const char *reply)
+vm_action_cb(const char *reply, void *data)
 {
 	zwin *zwin = data;
-	const char *charxml;
 	xmlNode *r;
 	Elm_Genlist_Item *gl;
 	vmitem *item;
 	zrpc_vm *vm;
 
-	if (!reply) return;
-	charxml = eina_stringshare_add(strchr(reply, '<'));
-	eina_stringshare_del(reply);
-	r = parsechar(charxml);
-	if (!parseint(r))
+	if (!reply || !(r = xml_parse_xml(reply)) || (!xml_parse_int(r)))
 	{
 		elm_label_label_set(zwin->zmain->status, "Job add failed!");
 		evas_object_show(zwin->zmain->notify);

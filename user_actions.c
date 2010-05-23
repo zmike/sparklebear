@@ -1,18 +1,16 @@
 static void
-user_action_cb(void *data, const char *reply)
+user_action_cb(const char *reply, void *data)
 {
 	zwin *zwin = data;
-	const char *charxml;
 	xmlNode *r;
 	Elm_Genlist_Item *gl;
 	useritem *item;
 	zrpc_user *user;
 
 	if (!reply) return;
-	charxml = eina_stringshare_add(strchr(reply, '<'));
-	eina_stringshare_del(reply);
-	r = parsechar(charxml);
-	if (parseint(r))
+	if (!(r = xml_parse_xml(reply)))
+                return;
+	if (xml_parse_int(r))
 	{
 		elm_label_label_set(zwin->zmain->status, "Action was successful!");
 		evas_object_show(zwin->zmain->notify);
@@ -51,7 +49,7 @@ user_remove_cb(void *data, Evas_Object *obj, void *event_info)
 	int uid;
 	useritem *item;
 
-	if (streq(zwin->view, "main_user"))
+	if (!strcmp(zwin->view, "main_user"))
 	{
 		gl = elm_genlist_selected_item_get(zwin->zmain_user->list);
 		if (!gl)
@@ -78,6 +76,19 @@ user_remove_cb(void *data, Evas_Object *obj, void *event_info)
 void
 user_edit_cb(void *data, Evas_Object *obj, void *event_info)
 {
+	zwin *zwin = data;
+	zinfo *zinfo = zwin->zinfo;
+	zrpc_user *user;
+
+	if ((user = zinfo_user_findbyuid(zinfo)))
+	{/*assume edit mode*/
+
+	}
+	else
+	{/*new user mode*/
+		
+	}
+	
 }
 
 void

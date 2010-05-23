@@ -1,5 +1,5 @@
 static void
-zinfo_updatevm(void *data, const char *reply)
+zinfo_updatevm(const char *reply, void *data)
 {
 	zwin *zwin = data;
 	zinfo *zinfo = zwin->zinfo;
@@ -9,14 +9,13 @@ zinfo_updatevm(void *data, const char *reply)
 //	zrpc_vif *v, *b;
 //	Elm_Hoversel_Item *it;
 //	int found = 0;
-	const char *charxml, *icon, *state;
+	const char *icon, *state;
 	char tmp[13];
 	xmlNode *r;
 	
-	charxml = eina_stringshare_add(strchr(reply, '<'));
-	eina_stringshare_del(reply);
-	r = parsechar(charxml);
-	if (!(vm = parsevm(r)))
+	if (!(r = xml_parse_xml(reply)))
+                return;
+	if (!(vm = xml_parse_vm(r)))
 	{
 		fprintf(stderr, "No vm returned!\n");
 		return;
@@ -29,7 +28,7 @@ zinfo_updatevm(void *data, const char *reply)
 	{
 		s = (zrpc_disk*)elm_hoversel_item_data_get(it);
 		EINA_LIST_FOREACH(vm->disks, l, d)
-			if (streq(s->ext_dev, d->ext_dev))
+			if (!strcmp(s->ext_dev, d->ext_dev))
 			{
 				elm_hoversel_item_del(it);
 				elm_hoversel_item_add(zinfo->disks, d->ext_dev, NULL, ELM_ICON_NONE, NULL, d);
@@ -61,7 +60,7 @@ zinfo_updatevm(void *data, const char *reply)
 		elm_hoversel_item_add(zinfo->vifs, v->name, NULL, ELM_ICON_NONE, NULL, v);
 */
 	
-	free_zvm(vm);
+	zvm_free(vm);
 	eina_stringshare_del(zinfo->state);
 	eina_stringshare_del(icon);
 	eina_stringshare_del(state);
@@ -203,9 +202,8 @@ printf("DEBUG: access type is %d\n", user->type);
 #endif
 	elm_slider_value_set(zinfo->level, user->type);
 
-	tmp = itoa(user->uid);
-	elm_scrolled_entry_entry_set(zinfo->id, tmp);
-	eina_stringshare_del(tmp);
+	eina_convert_itoa(user->uid, buf);
+	elm_scrolled_entry_entry_set(zinfo->id, buf);
 
 	elm_scrolled_entry_entry_set(zinfo->name, user->name);
 	elm_scrolled_entry_entry_set(zinfo->email, user->email);
@@ -312,7 +310,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 	elm_hover_target_set(zinfo->hover, zinfo->state_label);
 	evas_object_smart_callback_add(zinfo->hover, "clicked", zinfo_destroy_hover, zwin);
 
-	if ((!state) || streq(state, "b") || streq(state, "r") || streq(state, "NULL"))
+	if ((!state) || !strcmp(state, "b") || !strcmp(state, "r") || !strcmp(state, "NULL"))
 	{
 		zinfo->ic = elm_icon_add(zwin->win);
 		elm_icon_file_set(zinfo->ic, "images/system_suspend.png", NULL);
@@ -360,7 +358,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 
 
 	}
-	else if (streq(state, "p"))
+	else if (!strcmp(state, "p"))
 	{
 		zinfo->ic = elm_icon_add(zwin->win);
 		elm_icon_file_set(zinfo->ic, "images/1rightarrow.png", NULL);
@@ -396,7 +394,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_hover_content_set(zinfo->hover, "middle", zinfo->hb);
 		evas_object_show(zinfo->hb);
 	}
-	else if (streq(state, "d"))
+	else if (!strcmp(state, "d"))
 	{
 
 		zinfo->ic = elm_icon_add(zwin->win);
@@ -444,10 +442,10 @@ zinfo_keybind(void *data, Evas_Event_Key_Down *key)
 	zwin *zwin = data;
 
 	if (zwin->view == zwin->zinfo->vmview)
-		if (streq(key->keyname, "Escape"))
+		if (!strcmp(key->keyname, "Escape"))
 			zinfo_to_zmain(zwin, NULL, NULL);
 	if ((zwin->view == zwin->zinfo->vmhover) || (zwin->view == zwin->zinfo->userview))
-		if (streq(key->keyname, "Escape"))
+		if (!strcmp(key->keyname, "Escape"))
 			zinfo_destroy_hover(zwin, NULL, NULL);
 
 }
@@ -835,12 +833,12 @@ create_zinfo_user(void *data)
 	evas_object_show(zinfo->hb);
 
 	zinfo->ic = elm_icon_add(zwin->win);
-	elm_icon_file_set(zinfo->ic, "images/button_cancel.png", NULL);
+	elm_icon_file_set(zinfo->ic, "images/exit.png", NULL);
 	evas_object_show(zinfo->ic);
 
 	zinfo->hb = elm_button_add(zwin->win);
 	elm_button_icon_set(zinfo->hb, zinfo->ic);
-	elm_button_label_set(zinfo->hb, "Cancel");
+	elm_button_label_set(zinfo->hb, "Back");
 	elm_object_style_set(zinfo->hb, "anchor");
 	evas_object_smart_callback_add(zinfo->hb, "clicked", zinfo_destroy_hover, zwin);
 	elm_box_pack_end(zinfo->hbox, zinfo->hb);

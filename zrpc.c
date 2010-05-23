@@ -12,10 +12,10 @@ static int
 _zcon_add(void *data, int type, void *event)
 {
 	zrpc_con *zcon;
-	const char *zreq, *itoav;
-	char *post, *http, *host, *cookiestring, *req;
+	char itoav[13];
 	Ecore_Con_Event_Server_Add *ev;
-	int len, headlen, x, host_header = 0, rsize;
+        Eina_Strbuf *sbuf;
+        int x;
 	zrpc_handle z = -1;
 
 	if (!(zcon = data)) return 1;
@@ -39,64 +39,39 @@ _zcon_add(void *data, int type, void *event)
 		ecore_con_server_del(zcon->server[z]);
 		return 1;
 	}
-	/*make this all local so we can reuse the struct later*/
-	zreq = zcon->buf[z];
-	len = zcon->bufsize[z];
-	zcon->buf[z] = NULL;
-	zcon->bufsize[z] = 0;
 
 
-
+        sbuf = eina_strbuf_new();
 	/*set http header*/
 
-	post = "POST ";
-	http = " HTTP/1.1\n\
+	eina_strbuf_append(sbuf, "POST ");
+        if (zcon->rpc_path)
+                eina_strbuf_append(sbuf, zcon->rpc_path);
+        else
+                eina_strbuf_append(sbuf, "/");
+
+	eina_convert_itoa(eina_strbuf_length_get(zcon->buf[z]), itoav);
+	eina_strbuf_append_printf(sbuf, " HTTP/1.1\n\
 Content-Type: text/xml\n\
-Content-length: ";
+Content-length: %s\n", itoav);
 
-	host = NULL;
 	if (zcon->host_header)
-	{
-		host = calloc(strlen(zcon->host_header)+strlen("Host: \n")+1, sizeof(char));
-		sprintf(host, "Host: %s\n", zcon->host_header);
-		host_header = strlen(host);
-	}
-	headlen = strlen(post) + strlen(http) + ((zcon->rpc_path) ? strlen(zcon->rpc_path) : 1) + host_header;
-	/*call itoa for request length*/
-	itoav = itoa(strlen(zreq)); //malloc string has to be freed later
-	if (zcon->zcookie != NULL)
-	{/*add cookie if it exists*/
-		cookiestring = "Cookie: sessid=";
-		rsize = strlen(zreq)+headlen+eina_stringshare_strlen(itoav)+strlen(cookiestring)+eina_stringshare_strlen(zcon->zcookie);
-		req = calloc((rsize+4), sizeof(char)); /*+3 for newlines, 1 for null*/
-		if (host) sprintf(req, "%s%s%s%d\n%s%s%s\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, cookiestring, zcon->zcookie, host, zreq);
-		else sprintf(req, "%s%s%s%d\n%s%s\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, cookiestring, zcon->zcookie, zreq);
-	}
-	else
-	{/*must be a login, so no cookie added*/
-		req = calloc((strlen(zreq)+headlen+eina_stringshare_strlen(itoav))+3, sizeof(char));
-		if (host) sprintf(req, "%s%s%s%d\n%s\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, host, zreq);
-		else sprintf(req, "%s%s%s%d\n\n%s", post, ((zcon->rpc_path) ? zcon->rpc_path : "/") , http, len, zreq);
-	}
-	/*free itoa result*/
-	eina_stringshare_del(itoav);
-	eina_stringshare_del(zreq);
-	free(host);
+                eina_strbuf_append_printf(sbuf, "Host: %s\n", zcon->host_header);
 
-	zcon->buf[z] = eina_stringshare_add(req);
-	free(req);
+	if (zcon->zcookie)
+	/*add cookie if it exists*/
+                eina_strbuf_append_printf(sbuf, "Cookie: sessid=%s\n", zcon->zcookie);
 
-	/*size of request*/
-	zcon->bufsize[z] = eina_stringshare_strlen(zcon->buf[z]);
+	eina_strbuf_prepend_printf(zcon->buf[z], "%s\n", eina_strbuf_string_get(sbuf));
 
 #ifdef DEBUG
 	printf("\n\t\tCalling %s @ %s:%d\n", zcon->call[z], zcon->host, zcon->port);
 #endif
 #ifdef XML_DEBUG
-	printf("\n%s\n", zcon->buf[z]);
+	printf("\n%s\n", eina_strbuf_string_get(zcon->buf[z]));
 #endif
 	/*actually queue up the send job*/
-	if (!ecore_con_server_send(zcon->server[z], zcon->buf[z], zcon->bufsize[z]))
+	if (!ecore_con_server_send(zcon->server[z], eina_strbuf_string_get(zcon->buf[z]), eina_strbuf_length_get(zcon->buf[z])))
 		printf("send failed!\n");
 
 	/*no need to free anything else, _zcon_del will take care of that*/
@@ -117,7 +92,6 @@ _zcon_del(void *data, int type, void *event)
 	Ecore_Con_Event_Server_Del *ev;
 	int x;
 	zrpc_handle z = -1;
-	zrpc_network_cb cb;
 
 	/*same handle check*/
 	zcon = data;
@@ -138,17 +112,14 @@ _zcon_del(void *data, int type, void *event)
 	zcon->server[z] = NULL;
 
 	/*reset buffer if it exists*/
-	eina_stringshare_del(zcon->buf[z]);
+	eina_strbuf_free(zcon->buf[z]);
 	zcon->buf[z] = NULL;
 
-	zcon->bufsize[z] = 0;
-
 	/*zero the reply since it will be wrong anyway*/
-	eina_stringshare_del(zcon->recbuf[z]);
+	eina_strbuf_free(zcon->recbuf[z]);
 	zcon->recbuf[z] = NULL;
-	zcon->recbufsize[z] = 0;
 
-	if (streq(zcon->call[z], "User.logout"))
+	if (!strcmp(zcon->call[z], "User.logout"))
 	{/*free/null the cookie on logout*/
 		eina_stringshare_del(zcon->zcookie);
 		zcon->zcookie = NULL;
@@ -158,13 +129,8 @@ _zcon_del(void *data, int type, void *event)
 	/*pass the callback so an error can be detected*/
 	if (zcon->cb[z])
 	{
-		if (!(cb = zcon->cb[z]))
-		{
-			printf("setting cb failed!\n");
-			return 1;
-		}
 		/*run the cb, passing along the handle*/
-		cb(zcon->cbd[z], NULL);
+		(*zcon->cb[z])(NULL, zcon->cbd[z]);
 	}
 
 
@@ -180,11 +146,9 @@ _zcon_rec(void *data, int type, void *event)
 	zrpc_con *zcon;
 	Ecore_Con_Event_Server_Data *ev;
 	int x;
-	char *test, buf[37];
-	const char *ret;
+	const char *test;
+        char buf[37], *ret;
 	zrpc_handle z = -1;
-	zrpc_network_cb cb;
-
 	
 	/*regular handle grab/check*/
 	if (!(zcon = data)) return 1;
@@ -199,67 +163,38 @@ _zcon_rec(void *data, int type, void *event)
 			}
 	if (z < 0) return 1;
 
-	/*if data has been previously received for this zrpc server handle,
-	 * the recbuf will have data in it resulting from that call.
-	 * we need to add on to this data.
-	 */
-	if (zcon->recbuf[z])
-	{/*try to realloc to add the size of the receive event*/
-		if (!(zcon->recbuf[z] = realloc(zcon->recbuf[z], zcon->recbufsize[z] + ev->size)))
-			return 1;
-		/*memcpy because it isn't null terminated data
-		 * pointer math ensures that we are adding right where we left off
-		 */
-		memcpy(zcon->recbuf[z]+zcon->recbufsize[z], ev->data, ev->size);
-		/*increase recbufsize by the size of the event*/
-		zcon->recbufsize[z] += ev->size;
-	}
-	/*if this is the first data receive call for a function, recbuf is null*/
-	else
-	{/*attempt to alloc size of event data*/
-		if (!(zcon->recbuf[z] = calloc(ev->size+1, sizeof(char))))
-			return 1;
-		memcpy(zcon->recbuf[z], ev->data, ev->size);
-		zcon->recbufsize[z] = ev->size;
-	}
+	if (!zcon->recbuf[z])
+                zcon->recbuf[z] = eina_strbuf_new();
+
+        /*try to append, involves a realloc so bail if we fail*/
+	if (!eina_strbuf_append_length(zcon->recbuf[z], ev->data, ev->size))
+		return 1;
+
 #ifdef XML_DEBUG
-	printf("\n%s\n", zcon->recbuf[z]);
+	printf("\n%s\n", eina_strbuf_string_get(zcon->recbuf[z]));
 #endif
-
-	/* strlen("</methodResponse>") = 17, hence 17 */
-	if ((test = strstr(zcon->recbuf[z], "</methodResponse>")))
+        test = eina_strbuf_string_get(zcon->recbuf[z]);
+	if (strstr(test, "</methodResponse>"))
 	{/*if methodresponse> is receieved, we have the full call*/
-		if (test[17]) test[17] = 0; 	/*now we need to null terminate the string.
-						* if the char* is big enough, we zero the correct char
-						*/
-		else
-		{/*otherwise realloc by 1 for the null*/
-			if (!(zcon->recbuf[z] = realloc(zcon->recbuf[z], zcon->recbufsize[z]+1)))
-				return 1;
-			zcon->recbufsize[z] += 1;
-			zcon->recbuf[z][zcon->recbufsize[z]] = 0;
-		}
-
 		/*done with the server now, so we can call delete on it*/
 		ecore_con_server_del(zcon->server[z]);
 		zcon->server[z] = NULL;
 
-		eina_stringshare_del(zcon->buf[z]);
+		eina_strbuf_free(zcon->buf[z]);
 		zcon->buf[z] = NULL;
-
-		zcon->bufsize[z] = 0;
-		zcon->recbufsize[z] = 0;
 
 		if (zcon->call[z])
 		{
-			if (streq(zcon->call[z], "User.logout"))
+			if (!strcmp(zcon->call[z], "User.logout"))
 			{
 				eina_stringshare_del(zcon->zcookie);
 				zcon->zcookie = NULL;
 			}
-			else if (streq(zcon->call[z], "User.login"))
+			else if (!strcmp(zcon->call[z], "User.login"))
 			{
-				test = strstr(zcon->recbuf[z], "sessid=");
+				if (zcon->zcookie) eina_stringshare_del(zcon->zcookie);
+                                test = eina_strbuf_string_get(zcon->recbuf[z]);
+				test = strstr(test, "sessid=");
 				sscanf(test, "sessid=%[^;];", buf);
 				zcon->zcookie = eina_stringshare_add(buf);
 #ifdef DEBUG
@@ -269,8 +204,8 @@ printf("Cookie grabbed: %s\n", zcon->zcookie);
 			eina_stringshare_del(zcon->call[z]);
 		}
 
-		ret = eina_stringshare_add(zcon->recbuf[z]);
-		free(zcon->recbuf[z]);
+		ret = eina_strbuf_string_steal(zcon->recbuf[z]);
+                eina_strbuf_free(zcon->recbuf[z]);
 		zcon->recbuf[z] = NULL;
 		
 		/*if we get this far, we have a null terminated rpc response
@@ -278,14 +213,11 @@ printf("Cookie grabbed: %s\n", zcon->zcookie);
 		 */
 		if (zcon->cb[z])
 		{
-			if (!(cb = zcon->cb[z]))
-			{
-				printf("setting cb failed!\n");
-				return 1;
-			}
 			/*run the cb, passing along the reply*/
-			cb(zcon->cbd[z], ret);
+			(*zcon->cb[z])((const char*)ret, zcon->cbd[z]);
 		}
+
+                free(ret);
 
 	}
 		
@@ -299,7 +231,7 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 	/*set up initial variables*/
 	xmlDocPtr doc;
 	xmlChar *xmlbuff;
-	int buffersize, x, *y, w;
+	int buffersize, x, *y, w, numints;
 	void *a, *b;
 	Eina_List *l = NULL;
 	void *s;
@@ -325,18 +257,19 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 	zcon->cb[z] = cb;
 	zcon->cbd[z] = cbd;
 	doc = xmlNewDoc(BAD_CAST "1.0"); //init the xml document
-	xml_newcall(doc, zcon->call[z]); //set up the doc with the methodcall
+	xml_xml_new_call(doc, zcon->call[z]); //set up the doc with the methodcall
 	if (zcon->params[z])
 	{/*if the params aren't null*/
 		EINA_LIST_FOREACH(zcon->params[z], l, s)
 		/* use eina list for params to have uniform functions */
 		{/*FIXME: add type checking for last couple calls*/
 			if (isalnum((*(char*)s))) /*dereference char* to char and check for non-garbage*/
-				xml_newstring(doc, (char*)s); /*must be string*/
+				xml_xml_new_string(doc, (char*)s); /*must be string*/
 			else /*otherwise int*/
 			{
 				y = (int*)s;
 				w = 0;
+				numints = 0;
 				a = NULL;
 				b = NULL;
 				if (l->prev)
@@ -351,18 +284,27 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 						 * be more than 100k apart for any zrpc function
 						 * currently existing, so it's heap data*/
 							|| (&y[w] == a) || (&y[w] == b))
-							/*also check prev/next items in list for collision*/
+							/*also check prev/next items in list for pointer collision*/
 							break;
-					xml_newint(doc, y[w++]);
+					numints++;
+					w++;
 				}
+				if (numints > 1)
+				{
+					xml_xml_new_array(doc);
+					for (w = 0; w < numints; w++)
+						xml_xml_new_int(doc, y[w], 1);
+				}
+				else
+					xml_xml_new_int(doc, y[0], 0);
 			}
 		}
 	}
 	//dumps the xmldoc into a a xmlChar* which is the same as a char*
 	xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
 	//copy to zcon struct and set bufsize
-	zcon->buf[z] = eina_stringshare_add((char*)xmlbuff);
-	zcon->bufsize[z] = eina_stringshare_strlen(zcon->buf[z]);
+        zcon->buf[z] = eina_strbuf_new();
+        eina_strbuf_append(zcon->buf[z], (char*)xmlbuff);
 
 	//add event handlers if they don't exist
 	if (!zcon->add) zcon->add = ecore_event_handler_add(ECORE_CON_EVENT_SERVER_ADD, _zcon_add, zcon);
@@ -402,13 +344,12 @@ static int uid_sort(const void *a, const void *b)
 	return x->uid - y->uid;
 }
 
-static void _collector(void *data, const char *reply)
+static void _collector(const char *reply, void *data)
 {
 	zrpc_meta_struct *meta = data;
 	int it = 0, numusers = meta->num;
 	static int count;
 	zrpc_user *user;
-	const char *y;
 	xmlNode *r;
 	double timer;
 	zrpc_con *zcon;
@@ -418,11 +359,10 @@ static void _collector(void *data, const char *reply)
 
 	if (!(zcon = meta->zcon)) return;
 
-	y = eina_stringshare_add(strchr(reply, '<'));
-	eina_stringshare_del(reply);
-	r = parsechar(y);
+	if (!(r = xml_parse_xml(reply)))
+          return;
 
-	user = parseuser(r);
+	user = xml_parse_user(r);
 
 	users = eina_list_append(users, user);
 	if (!it) return;
@@ -455,24 +395,21 @@ printf("DEBUG: %d of %d have arrived...\n", count, numusers);
 	meta->extra = users;
 	users = NULL;
 
-	meta->cb(meta, NULL);
+	meta->cb(NULL, meta);
 }
 
-static void _getusers(void *data, const char *reply)
+static void _getusers(const char *reply, void *data)
 {
 	zrpc_meta_struct *meta = data;
 	zrpc_con *zcon;
-	const char *y;
 	xmlNode *r;
 	int *users, it, numusers = 0;
 
 	if (!(zcon = meta->zcon)) return;
 
-	/*parsing*/
-	y = eina_stringshare_add(strchr(reply, '<'));
-	eina_stringshare_del(reply);
-	r = parsechar(y);
-	users = parseusers(r);
+	if (!(r = xml_parse_xml(reply)))
+          return;
+	users = xml_parse_users(r);
 
 	/*count up the users*/
 	for (it = 1; users[it]; it++)
@@ -506,7 +443,7 @@ static void _getusers(void *data, const char *reply)
 int meta_getUsersFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	/*use a zrpc meta here to preserve what was passed to it*/
-	zrpc_meta_struct *x = new_zmeta();
+	zrpc_meta_struct *x = zmeta_new();
 	x->cb = cb;
 	x->zcon = zcon;
 	x->cbd = cbd;
@@ -515,4 +452,122 @@ int meta_getUsersFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 		return 0;
 		
 	return 1;
+}
+
+zrpc_meta_struct *zmeta_new()
+{
+	zrpc_meta_struct *new;
+	if (!(new = calloc(1, sizeof(zrpc_meta_struct))))
+		return NULL;
+
+	return new;
+}
+
+zrpc_disk *zdisk_new()
+{
+	zrpc_disk *new;
+	if (!(new = calloc(1, sizeof(zrpc_disk))))
+		return NULL;
+
+	return new;
+}
+
+void zdisk_free(zrpc_disk *disk)
+{
+	if (!disk) return;
+
+	eina_stringshare_del(disk->int_dev);
+	eina_stringshare_del(disk->ext_dev);
+	eina_stringshare_del(disk->mode);
+	eina_stringshare_del(disk->type);
+	eina_stringshare_del(disk->partition_type);
+	eina_stringshare_del(disk->mapped_dev);
+
+	free(disk);
+}
+
+
+zrpc_vif *zvif_new()
+{
+	zrpc_vif *new;
+	if (!(new = calloc(1, sizeof(zrpc_vif))))
+		return NULL;
+
+	return new;
+}
+
+void zvif_free(zrpc_vif *vif)
+{
+	if (!vif) return;
+
+	eina_stringshare_del(vif->name);
+	eina_stringshare_del(vif->mac);
+	eina_stringshare_del(vif->bridge);
+	eina_stringshare_del(vif->script);
+	eina_stringshare_del(vif->type);
+	eina_stringshare_del(vif->ip);
+	eina_stringshare_del(vif->netmask);
+	eina_stringshare_del(vif->gateway);
+	eina_stringshare_del(vif->broadcast);
+
+	free(vif);
+}
+
+zrpc_vm *zvm_new()
+{
+	zrpc_vm *new;
+	if (!(new = calloc(1, sizeof(zrpc_vm))))
+		return NULL;
+	
+	return new;
+}
+
+void zvm_free(zrpc_vm *vm)
+{
+        zrpc_disk *disk;
+        zrpc_vif *vif;
+        
+	if (!vm) return;
+
+	eina_stringshare_del(vm->name);
+	eina_stringshare_del(vm->uuid);
+	eina_stringshare_del(vm->puuid);
+	eina_stringshare_del(vm->type);
+	eina_stringshare_del(vm->os);
+	eina_stringshare_del(vm->kernel);
+	eina_stringshare_del(vm->ramdisk);
+	eina_stringshare_del(vm->cmdline);
+	eina_stringshare_del(vm->on_reboot);
+	eina_stringshare_del(vm->on_poweroff);
+	eina_stringshare_del(vm->on_crash);
+	eina_stringshare_del(vm->vncpasswd);
+	eina_stringshare_del(vm->state);
+
+	EINA_LIST_FREE(vm->disks, disk)
+		zdisk_free(disk);
+	EINA_LIST_FREE(vm->vifs, vif)
+		zvif_free(vif);
+
+	free(vm);
+}
+
+zrpc_user *zuser_new()
+{
+	zrpc_user *new;
+        
+	if (!(new = calloc(1, sizeof(zrpc_user))))
+		return NULL;
+
+	return new;
+}
+
+void zuser_free(zrpc_user *user)
+{
+	if (!user) return;
+
+	eina_stringshare_del(user->name);
+	eina_stringshare_del(user->email);
+	eina_stringshare_del(user->language);
+
+	free(user);
 }

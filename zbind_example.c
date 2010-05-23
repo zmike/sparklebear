@@ -5,8 +5,8 @@
  * so error checking is possible.  I choose not to here because it's pedantic and tedious.
  */
 
-#define DEBUG 1 /*enables some general parsing debug info*/
-#define XML_DEBUG 1/*shows full rpc call send/receive*/
+//#define DEBUG 1 /*enables some general parsing debug info*/
+//#define XML_DEBUG 1/*shows full rpc call send/receive*/
 #include <stdio.h>
 #include "zrpc.h"
 #include "zrpc.c"
@@ -14,12 +14,9 @@
 /*after logout completes*/
 void cleanup(zrpc_con *zcon, const char *reply)
 {
-	const char *charxml;
 	xmlNode *r;
 
-	charxml = eina_stringshare_add(strchr(reply, '<'));
-	r = parsechar(charxml);
-	if (parseint(r))
+	if ((r = xml_parse_xml(reply)) && (xml_parse_int(r)))
 		printf("Logout successful!\n");
 	else printf("Logout failed!\n");
 
@@ -27,49 +24,63 @@ void cleanup(zrpc_con *zcon, const char *reply)
 	exit(0);
 }
 
+void print_uinfos(const char *reply, void *data)
+{
+	zrpc_meta_struct *meta;
+	zrpc_con *zcon;
+	Eina_List *users, *l;
+	zrpc_user *user;
+
+	meta = data;
+	zcon = meta->cbd;
+	users = meta->extra;
+
+	EINA_LIST_FOREACH(users, l, user)
+		printf("Name: %s\nUID: %d\nLanguage: %s\n", user->name, user->uid, user->language);
+
+	EINA_LIST_FREE(users, user)
+		zuser_free(user);
+
+	/*passing a callback for logout isn't really necessary, but why not*/
+	zrpc_User_logout(zcon, (void*)cleanup, zcon);
+}
+
 /*second callback, parses getVMsFull*/
 void print_infos(zrpc_con *zcon, const char *reply)
 {
 	/*seek to the xml data*/
-	const char *charxml;
 	Eina_List *vms, *l;
 	zrpc_vm *vm;
 	xmlNode *r;
 
-	charxml = eina_stringshare_add(strchr(reply, '<'));
-	eina_stringshare_del(reply);
-
 	/*parse the shit out of it*/
-	r = parsechar(charxml);
-	vms = parsevmsfull(r);
+	if (!(r = xml_parse_xml(reply)))
+                printf("Error with reply!\n");
+	vms = xml_parse_vmsfull(r);
 	/*print out some stats to prove the data was grabbed*/
 	EINA_LIST_FOREACH(vms, l, vm)
 		printf("\n********\n\nUUID: %s\nName: %s\nOS: %s\nUptime: %d\n", vm->uuid, vm->name, vm->os, vm->uptime);
 
 	/*free the vm list*/
 	EINA_LIST_FREE(vms, vm)
-		free_zvm(vm);
+		zvm_free(vm);
 
-	/*passing a callback for logout isn't really necessary, but why not*/
-	zrpc_User_logout(zcon, (void*)cleanup, zcon);
 
+	meta_getUsersFull(zcon, (void*)print_uinfos, zcon);
 }
 
 /*the first callback, called after login response has been received*/
 void post(zrpc_con *zcon, const char *reply)
 {/*parameters are a zcon handle, and the handle number*/
-	const char *tmp, *xml, *charxml;
 	xmlNode *r;
 
-	/*new pointer to seek to the xml data*/
-	charxml = eina_stringshare_add(strchr(reply, '<'));
-	eina_stringshare_del(reply);
 	/* char* -> xmlNode */
-	r = parsechar(charxml);
-	/*parseint handles int and boolean tags and returns the value.
+	if (!(r = xml_parse_xml(reply)))
+                printf("Error with reply!\n");
+	/*xml_parse_int handles int and boolean tags and returns the value.
 	 *all parse functions free the node passed to them
 	 */
-	if (parseint(r)) /*if login succeeded*/
+	if (xml_parse_int(r)) /*if login succeeded*/
 		zrpc_VM_getVMsFull(zcon, (void*)print_infos, zcon);
 	else
 	{

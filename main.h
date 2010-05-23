@@ -8,13 +8,11 @@
 /*this one makes this VERY noisy*/
 //#define EDEBUG 1
 /*this one prints the calls/receives*/
-//#define XML_DEBUG 1
+#define XML_DEBUG 1
 
 //BEGIN ZRPC.C
 #include "zrpc.c"
 //END ZRPC.C
-
-
 
 static char *zlogo = "images/logo.png";
 
@@ -37,6 +35,8 @@ static void zmain_to_zlogin(void *data, Evas_Object *obj, void *event_info);
 static void zinfo_to_zlogin(void *data, Evas_Object *obj, void *event_info);
 void zinfo_job_updateuser(void *data, Evas_Object *obj, void *event_info);
 void create_zinfo_user(void *data);
+zrpc_user* zinfo_user_findbyuid(void *data);
+
 
 typedef struct _vmitem
 {
@@ -69,7 +69,7 @@ void free_vmitem(vmitem *item)
 	item->state = NULL;
 	if (item->vm)
 	{
-		free_zvm(item->vm);
+		zvm_free(item->vm);
 		item->vm = NULL;
 	}
 
@@ -104,7 +104,7 @@ void free_useritem(useritem *item)
 
 	if (item->user)
 	{
-		free_zuser(item->user);
+		zuser_free(item->user);
 		item->user = NULL;
 	}
 
@@ -134,9 +134,8 @@ typedef struct _zmain
 		*list,
 		*notify, *status;
 	Elm_Genlist_Item_Class *itc;
-	Elm_Toolbar_Item *tbitem;
 	Ecore_Animator *anim;
-	Eina_List *tb_list;
+	Eina_List *view_list, *tb_list;
 	const char *view;
 } zmain;
 
@@ -208,13 +207,13 @@ get_state_icon(const char *state)
 {
 	const char *buf;
 
-	if (streq(state, "") || streq(state, "r"))
+	if (!strcmp(state, "") || !strcmp(state, "r"))
 		buf = "images/player_play.png";
-	else if (streq(state, "b"))
+	else if (!strcmp(state, "b"))
 		buf = "images/player_time.png";
-	else if (streq(state, "d") || streq(state, "s"))
+	else if (!strcmp(state, "d") || !strcmp(state, "s"))
 		buf = "images/player_stop.png";
-	else if (streq(state, "p"))
+	else if (!strcmp(state, "p"))
 		buf = "images/player_pause.png";
 	else
 		buf = "images/dialog_close.png";
@@ -227,13 +226,13 @@ get_state_name(const char *state)
 {
 	const char *buf;
 
-	if (streq(state, "") || streq(state, "r"))
+	if (!strcmp(state, "") || !strcmp(state, "r"))
 		buf = "Running";
-	else if (streq(state, "b"))
+	else if (!strcmp(state, "b"))
 		buf = "Blocked";
-	else if (streq(state, "d") || streq(state, "s"))
+	else if (!strcmp(state, "d") || !strcmp(state, "s"))
 		buf = "Dying";
-	else if (streq(state, "p"))
+	else if (!strcmp(state, "p"))
 		buf = "Paused";
 	else
 		buf = "Shut Down";

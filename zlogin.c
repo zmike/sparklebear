@@ -7,11 +7,11 @@ zlogin_keybind(void *data, Evas_Event_Key_Down *key)
 		zlogin *zlogin = zwin->zlogin;
 		Evas_Object *f;
 
-		if (streq(key->keyname, "Escape"))
+		if (!strcmp(key->keyname, "Escape"))
 			exit_wrapper(zwin, NULL, NULL);
-		else if (streq(key->keyname, "Return") || streq(key->keyname, "KP_Enter"))
+		else if (!strcmp(key->keyname, "Return") || !strcmp(key->keyname, "KP_Enter"))
 			zlogin_try(zwin, NULL, NULL);
-		else if (streq(key->keyname, "Tab"))
+		else if (!strcmp(key->keyname, "Tab"))
 		{
 			if (!zlogin->lp->next) zlogin->lp = zlogin->lp->prev;
 			else zlogin->lp = zlogin->lp->next;
@@ -27,9 +27,9 @@ static int label_update(void *data)
 		return ECORE_CALLBACK_CANCEL;
 	Evas_Object *label = zlogin->stl;
 	const char *text = elm_label_label_get(label);
-	if streq(text, "Authenticating.")
+	if (!strcmp(text, "Authenticating."))
 		elm_label_label_set(label, "Authenticating..");
-	else if streq(text, "Authenticating..")
+	else if (!strcmp(text, "Authenticating.."))
 		elm_label_label_set(label, "Authenticating...");
 	else
 		elm_label_label_set(label, "Authenticating.");
@@ -65,7 +65,7 @@ void zlogin_stop(void *data)
 	ecore_timer_del(zlogin->lt);
 }
 
-void zlogin_test(void *data, const char *reply)
+void zlogin_test(const char *reply, void *data)
 {
 	zwin *zwin = data;
 	zlogin *zlogin = zwin->zlogin;
@@ -73,21 +73,17 @@ void zlogin_test(void *data, const char *reply)
 	Evas_Object *l = lp->data;
 	Evas_Object *p = lp->next->data;
 	int zwidth = 800, zheight = 600;
-	const char *charxml;
 	xmlNode *r;
 	
 	if (!zwin->zcon->zcookie) zwin->zcon->zcookie = calloc(37, sizeof(char));
 
-	if (reply)
-	{
-		charxml = eina_stringshare_add(strchr(reply, '<'));
-		eina_stringshare_del(reply);
 #ifdef DEBUG
 printf("parsing login...\n");
 #endif
-		r = parsechar(charxml);
+        if ((r = xml_parse_xml(reply)))
+        {
 	
-		if (parseint(r))
+		if (xml_parse_int(r))
 		{
 			evas_object_key_ungrab(zwin->win, "Tab", 0, 0);
 			evas_object_smart_callback_del(zlogin->loginbutton, "clicked", zlogin_try);
