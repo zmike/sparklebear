@@ -20,8 +20,7 @@ view_main_vm(void *data, Evas_Object *obj, void *event_info)
 	elm_flip_go(win->main_vm->fl, ELM_FLIP_ROTATE_Y_CENTER_AXIS);
 	if (win->view == win->main_user->view)
 	{
-//		evas_object_hide(win->main_user->box2);
-//		evas_object_del(win->main_user->box2);
+		evas_object_del(win->main_user->box2);
 		EINA_LIST_FREE(win->elist, uitem)
 			free_useritem(uitem);
 		win->elist = NULL;
@@ -31,13 +30,10 @@ view_main_vm(void *data, Evas_Object *obj, void *event_info)
 		
 	}
 	else if (win->view == win->info->vmview)
-	{
-		evas_object_hide(win->info->frame);
-		evas_object_hide(win->info->hbox);
 		evas_object_del(win->info->hbox);
-	}
+
 	zmain_job_getvms(win);
-	win->timerget = ecore_timer_add(win->vmtimer, zmain_job_getvms, win);
+	win->timerget = ecore_timer_add(win->vmtimer, zmain_job_getvms, NULL);
 	win->view = win->main_vm->view;
 }
 
@@ -49,7 +45,8 @@ view_main_user(void *data, Evas_Object *obj, void *event_info)
 	if ((win->view == win->main_user->view) || (win->view == win->login->view))
 		return;
 
-	
+	if (win->view == win->info->vmview)
+		change_zinfo_to_zmain((void*)win->main_user->view, NULL, NULL);
 	create_main_user();
 	if (elm_flip_front_get(win->main_vm->fl))
 		elm_flip_content_back_set(win->main_vm->fl, win->main_user->box2);
@@ -71,10 +68,10 @@ view_main_user(void *data, Evas_Object *obj, void *event_info)
 		win->list = NULL;
 	}
 	else if (win->view == win->info->vmview)
-		evas_object_del(win->info->hbox);
+		evas_object_del(win->info->frame);
 
 	zmain_job_getusers(win);
-	win->timerget = ecore_timer_add(win->usertimer, zmain_job_getusers, win);
+	win->timerget = ecore_timer_add(win->usertimer, zmain_job_getusers, NULL);
 	win->view = win->main_user->view;
 }
 

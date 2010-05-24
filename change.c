@@ -48,7 +48,7 @@ printf("current view: %s\nshould be: %s\n",win->view,win->main_vm->view);
 			evas_object_resize(win->win, zwidth, zheight);
 			evas_object_move(win->win, (win->xres/2)-(zwidth/2), (win->yres/2)-(zheight/2));
 			printf("Starting vm info timer...\n");
-			win->timerget = ecore_timer_add(win->vmtimer, zmain_job_getvms, win);
+			win->timerget = ecore_timer_add(win->vmtimer, zmain_job_getvms, NULL);
 
 			return;
 		}
@@ -139,22 +139,22 @@ void
 change_zinfo_to_zmain(void *data, Evas_Object *obj, void *event_info)
 {
 	int x;
-	
-	ecore_timer_del(win->timerget);
-	create_main_vm();
 
-	win->timerget = ecore_timer_add(win->vmtimer, zmain_job_getvms, win);
-	ecore_job_add((void*)zmain_job_getvms, win);
-	elm_flip_content_front_set(win->main_vm->fl, win->main_vm->box2);
-	elm_flip_go(win->main_vm->fl, ELM_FLIP_ROTATE_X_CENTER_AXIS);
-	win->view = win->main_vm->view;
 	x = evas_object_key_grab(win->win, "Up", 0, 0, 1);
 	x = evas_object_key_grab(win->win, "Down", 0, 0, 1);
 	x = evas_object_key_grab(win->win, "Left", 0, 0, 1);
 	x = evas_object_key_grab(win->win, "Right", 0, 0, 1);
 	x = evas_object_key_grab(win->win, "Home", 0, 0, 1);
 	x = evas_object_key_grab(win->win, "End", 0, 0, 1);
-	evas_object_hide(win->info->frame);
-	evas_object_hide(win->info->hbox);
-	evas_object_del(win->info->hbox);
+	ecore_timer_del(win->timerget);
+	if (data == win->main_user->view)
+		return;
+	create_main_vm();
+
+	win->timerget = ecore_timer_add(win->vmtimer, zmain_job_getvms, NULL);
+	ecore_job_add((void*)zmain_job_getvms, NULL);
+	elm_flip_content_front_set(win->main_vm->fl, win->main_vm->box2);
+	elm_flip_go(win->main_vm->fl, ELM_FLIP_ROTATE_X_CENTER_AXIS);
+	win->view = win->main_vm->view;
+	evas_object_del(win->info->frame);
 }

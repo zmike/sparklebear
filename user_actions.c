@@ -64,7 +64,7 @@ user_remove_cb(void *data, Evas_Object *obj, void *event_info)
 	/*FIXME: error checking?*/
 
 		
-	if (!zrpc_User_removeUser(uid, zcon, user_action_cb, win))
+	if (!zrpc_User_removeUser(uid, zcon, user_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");

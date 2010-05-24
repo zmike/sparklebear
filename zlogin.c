@@ -81,7 +81,7 @@ printf("%s:%s\n", username, password);
 
 	zlogin_start(win);
 
-	if (zrpc_User_login(username, password, zcon, change_zlogin_to_zmain, win))
+	if (zrpc_User_login(username, password, zcon, change_zlogin_to_zmain, NULL))
 		return;
 
 	zlogin_stop(login);

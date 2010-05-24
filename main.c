@@ -83,7 +83,7 @@ elm_main(int argc, char **argv)
 	evas_object_smart_callback_add(win->win, "delete,request", exit_wrapper, NULL);
 	if (!evas_object_key_grab(win->win, "Escape", 0, 0, 1))
 		printf("Could not grab key 'Escape'\n");
-	evas_object_event_callback_add(win->win, EVAS_CALLBACK_KEY_DOWN, key_press, &win);
+	evas_object_event_callback_add(win->win, EVAS_CALLBACK_KEY_DOWN, key_press, NULL);
 
 	if (!elm_win_alpha_get(win->win))
 	{

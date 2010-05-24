@@ -57,7 +57,7 @@ vm_hibernate_cb(void *data, Evas_Object *obj, void *event_info)
 
 	if (!uuid || (strlen(uuid) != 36))
 		elm_label_label_set(win->main_vm->status, "Could not retrieve valid uuid for operation!");
-	else if (!zrpc_VM_save(uuid, zcon, vm_action_cb, win))
+	else if (!zrpc_VM_save(uuid, zcon, vm_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
@@ -87,7 +87,7 @@ vm_destroy_cb(void *data, Evas_Object *obj, void *event_info)
 
 	if (!uuid || (strlen(uuid) != 36))
 		elm_label_label_set(win->main_vm->status, "Could not retrieve valid uuid for operation!");	
-	else if (!zrpc_VM_destroy(uuid, zcon, vm_action_cb, win))
+	else if (!zrpc_VM_destroy(uuid, zcon, vm_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
@@ -117,7 +117,7 @@ vm_shutdown_cb(void *data, Evas_Object *obj, void *event_info)
 
 	if (!uuid || (eina_stringshare_strlen(uuid) != 36))
 		elm_label_label_set(win->main_vm->status, "Could not retrieve valid uuid for operation!");
-	else if (!zrpc_VM_shutdown(uuid, zcon, vm_action_cb, win))
+	else if (!zrpc_VM_shutdown(uuid, zcon, vm_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
@@ -149,7 +149,7 @@ vm_reboot_cb(void *data, Evas_Object *obj, void *event_info)
 
 	if (!uuid || (strlen(uuid) != 36))
 		elm_label_label_set(win->main_vm->status, "Could not retrieve valid uuid for operation!");
-	else if (!zrpc_VM_reboot(uuid, zcon, vm_action_cb, win))
+	else if (!zrpc_VM_reboot(uuid, zcon, vm_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
@@ -179,7 +179,7 @@ vm_pause_cb(void *data, Evas_Object *obj, void *event_info)
 
 	if (!uuid || (strlen(uuid) != 36))
 		elm_label_label_set(win->main_vm->status, "Could not retrieve valid uuid for operation!");
-	else if (!zrpc_VM_pause(uuid, zcon, vm_action_cb, win))
+	else if (!zrpc_VM_pause(uuid, zcon, vm_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
@@ -209,7 +209,7 @@ vm_unpause_cb(void *data, Evas_Object *obj, void *event_info)
 
 	if (!uuid || (strlen(uuid) != 36))
 		elm_label_label_set(win->main_vm->status, "Could not retrieve valid uuid for operation!");
-	else if (!zrpc_VM_unpause(uuid, zcon, vm_action_cb, win))
+	else if (!zrpc_VM_unpause(uuid, zcon, vm_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
@@ -303,5 +303,5 @@ vm_info_cb(void *data, Evas_Object *obj, void *event_info)
 	evas_object_hide(win->main_vm->box2);
 	evas_object_del(win->main_vm->box2);
 
-	win->timerget = ecore_timer_add(5, zinfo_job_updatevm, win);
+	win->timerget = ecore_timer_add(5, zinfo_job_updatevm, NULL);
 }

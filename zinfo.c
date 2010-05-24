@@ -77,7 +77,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 	elm_object_style_set(info->hover, "popout");
 	elm_hover_parent_set(info->hover, win->win);
 	elm_hover_target_set(info->hover, info->state_label);
-	evas_object_smart_callback_add(info->hover, "clicked", zinfo_destroy_hover, win);
+	evas_object_smart_callback_add(info->hover, "clicked", zinfo_destroy_hover, NULL);
 
 	if ((!state) || !strcmp(state, "b") || !strcmp(state, "r") || !strcmp(state, "NULL"))
 	{
@@ -88,7 +88,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Pause");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_pause_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_pause_cb, NULL);
 		elm_hover_content_set(info->hover, "top", info->hb);
 		evas_object_show(info->hb);
 		
@@ -99,7 +99,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Reboot");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_reboot_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_reboot_cb, NULL);
 		elm_hover_content_set(info->hover, "left", info->hb);
 		evas_object_show(info->hb);
 
@@ -110,7 +110,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Suspend");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_hibernate_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_hibernate_cb, NULL);
 		elm_hover_content_set(info->hover, "right", info->hb);
 		evas_object_show(info->hb);
 
@@ -121,7 +121,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Shutdown");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_shutdown_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_shutdown_cb, NULL);
 		elm_hover_content_set(info->hover, "middle", info->hb);
 		evas_object_show(info->hb);
 
@@ -137,7 +137,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Unpause");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_unpause_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_unpause_cb, NULL);
 		elm_hover_content_set(info->hover, "top", info->hb);
 		evas_object_show(info->hb);
 
@@ -148,7 +148,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Suspend");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_hibernate_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_hibernate_cb, NULL);
 		elm_hover_content_set(info->hover, "right", info->hb);
 		evas_object_show(info->hb);
 
@@ -159,7 +159,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Shutdown");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_shutdown_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_shutdown_cb, NULL);
 		elm_hover_content_set(info->hover, "middle", info->hb);
 		evas_object_show(info->hb);
 	}
@@ -173,7 +173,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Suspend");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_hibernate_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_hibernate_cb, NULL);
 		elm_hover_content_set(info->hover, "right", info->hb);
 		evas_object_show(info->hb);
 
@@ -184,7 +184,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 		elm_button_icon_set(info->hb, info->ic);
 		elm_button_label_set(info->hb, "Pause");
 		elm_object_style_set(info->hb, "anchor");
-		evas_object_smart_callback_add(info->hb, "clicked", vm_pause_cb, win);
+		evas_object_smart_callback_add(info->hb, "clicked", vm_pause_cb, NULL);
 		elm_hover_content_set(info->hover, "top", info->hb);
 		evas_object_show(info->hb);
 	}
@@ -196,7 +196,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 	elm_button_icon_set(info->hb, info->ic);
 	elm_button_label_set(info->hb, "Destroy");
 	elm_object_style_set(info->hb, "anchor");
-	evas_object_smart_callback_add(info->hb, "clicked", vm_destroy_cb, win);
+	evas_object_smart_callback_add(info->hb, "clicked", vm_destroy_cb, NULL);
 	elm_hover_content_set(info->hover, "bottom", info->hb);
 	evas_object_show(info->hb);
 
@@ -257,7 +257,7 @@ printf("DEBUG: setting user to %s state\n", (x) ? "active" : "inactive");
 int
 zinfo_job_updatevm(void *data)
 {
-	if (!zrpc_VM_getVM(win->info->vmuuid, zcon, &zinfo_updatevm, win))
+	if (!zrpc_VM_getVM(win->info->vmuuid, zcon, &zinfo_updatevm, NULL))
 	{
 		elm_label_label_set(win->main_vm->status, "Connection failed");
 		evas_object_show(win->main_vm->notify);

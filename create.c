@@ -34,7 +34,7 @@ create_info_vm(void)
 	WEIGHT(win->info->back, 0.0, 0.0);
 	ALIGN(win->info->back, 0.0, 0.0);
 	elm_box_pack_end(win->info->vbox1, win->info->back);
-	evas_object_smart_callback_add(win->info->back, "clicked", change_zinfo_to_zmain, win);
+	evas_object_smart_callback_add(win->info->back, "clicked", change_zinfo_to_zmain, NULL);
 	evas_object_show(win->info->back);
 
 	win->info->os_icon = elm_icon_add(win->win);
@@ -112,7 +112,7 @@ create_info_vm(void)
 	WEIGHT(win->info->state_icon, 1, 1);
 	ALIGN(win->info->state_icon, 0.0, -1);
 	elm_box_pack_end(win->info->vbox2, win->info->state_icon);
-	evas_object_smart_callback_add(win->info->state_icon, "clicked", zinfo_vm_state_change, win);
+	evas_object_smart_callback_add(win->info->state_icon, "clicked", zinfo_vm_state_change, NULL);
 	evas_object_show(win->info->state_icon);
 
 	win->info->state_label = elm_label_add(win->win);
@@ -205,7 +205,7 @@ create_info_vm(void)
 
 	win->info->notesend = elm_button_add(win->win);
 	elm_button_label_set(win->info->notesend, "Save");
-	evas_object_smart_callback_add(win->info->notesend, "clicked", NULL, win);
+	evas_object_smart_callback_add(win->info->notesend, "clicked", NULL, NULL);
 	WEIGHT(win->info->notesend, 0.0, 0.0);
 	ALIGN(win->info->notesend, 1.0, 1.0);
 	elm_box_pack_end(win->info->vbox4, win->info->notesend);
@@ -225,7 +225,7 @@ create_info_user(void)
 	elm_object_style_set(win->info->hover, "popout");
 	elm_hover_parent_set(win->info->hover, win->win);
 	elm_hover_target_set(win->info->hover, win->main_user->list);
-	evas_object_smart_callback_add(win->info->hover, "clicked", zinfo_destroy_hover, win);
+	evas_object_smart_callback_add(win->info->hover, "clicked", zinfo_destroy_hover, NULL);
 
 
 //hbox
@@ -258,7 +258,7 @@ create_info_user(void)
 	elm_toggle_label_set(win->info->state_label, "Active");
 	elm_toggle_states_labels_set(win->info->state_label, "Yes", "No");
 	elm_object_scale_set(win->info->state_label, 1.7);
-	evas_object_smart_callback_add(win->info->state_label, "changed", zinfo_job_updateuser_state, win);
+	evas_object_smart_callback_add(win->info->state_label, "changed", zinfo_job_updateuser_state, NULL);
 	elm_box_pack_end(win->info->vbox2, win->info->state_label);
 	evas_object_show(win->info->state_label);
 
@@ -353,7 +353,7 @@ create_info_user(void)
 	elm_slider_min_max_set(win->info->level, USER_LEVEL_MIN, USER_LEVEL_MAX);
 	elm_slider_indicator_format_set(win->info->level, "%1.0f");
 	elm_object_scale_set(win->info->level, 3);
-	evas_object_smart_callback_add(win->info->level, "changed", zinfo_job_updateuser_level, win);
+	evas_object_smart_callback_add(win->info->level, "changed", zinfo_job_updateuser_level, NULL);
 	elm_box_pack_end(win->info->vbox2, win->info->level);
 	evas_object_show(win->info->level);
 
@@ -375,7 +375,7 @@ create_info_user(void)
 	elm_button_icon_set(win->info->hb, win->info->ic);
 	elm_button_label_set(win->info->hb, "Refresh");
 	elm_object_style_set(win->info->hb, "anchor");
-	evas_object_smart_callback_add(win->info->hb, "clicked", zinfo_job_updateuser, win);
+	evas_object_smart_callback_add(win->info->hb, "clicked", zinfo_job_updateuser, NULL);
 	elm_box_pack_end(win->info->hbox, win->info->hb);
 	evas_object_show(win->info->hb);
 
@@ -387,7 +387,7 @@ create_info_user(void)
 	elm_button_icon_set(win->info->hb, win->info->ic);
 	elm_button_label_set(win->info->hb, "Back");
 	elm_object_style_set(win->info->hb, "anchor");
-	evas_object_smart_callback_add(win->info->hb, "clicked", zinfo_destroy_hover, win);
+	evas_object_smart_callback_add(win->info->hb, "clicked", zinfo_destroy_hover, NULL);
 	elm_box_pack_end(win->info->hbox, win->info->hb);
 	evas_object_show(win->info->hb);
 
@@ -399,7 +399,7 @@ create_info_user(void)
 	elm_button_icon_set(win->info->hb, win->info->ic);
 	elm_button_label_set(win->info->hb, "Apply");
 	elm_object_style_set(win->info->hb, "anchor");
-	evas_object_smart_callback_add(win->info->hb, "clicked", user_edit_cb, win);
+	evas_object_smart_callback_add(win->info->hb, "clicked", user_edit_cb, NULL);
 	elm_box_pack_end(win->info->hbox, win->info->hb);
 	evas_object_show(win->info->hb);
 
@@ -476,7 +476,7 @@ create_login(void)
 	elm_button_label_set(login->loginbutton, "Login");
 	elm_object_focus_allow_set(login->loginbutton, 0);
 	elm_box_pack_end(login->hbox, login->loginbutton);
-	evas_object_smart_callback_add(login->loginbutton, "clicked", zlogin_try, win);
+	evas_object_smart_callback_add(login->loginbutton, "clicked", zlogin_try, NULL);
 	evas_object_show(login->loginbutton);
 	
 	
@@ -541,21 +541,21 @@ create_main(void)
 
 	main_vm->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_vm->icon, "images/exit.png", NULL);
-	tb = elm_toolbar_item_add(main_vm->viewbar, main_vm->icon, "Logout", panel_logout, win);
+	tb = elm_toolbar_item_add(main_vm->viewbar, main_vm->icon, "Logout", panel_logout, NULL);
 
 	tb = elm_toolbar_item_add(main_vm->bar, NULL, NULL, NULL, NULL);
 	elm_toolbar_item_separator_set(tb, 1);
 	
 	main_vm->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_vm->icon, "images/computer.png", NULL);
-	tb = elm_toolbar_item_add(main_vm->viewbar, main_vm->icon, "VM view", view_main_vm, win);
+	tb = elm_toolbar_item_add(main_vm->viewbar, main_vm->icon, "VM view", view_main_vm, NULL);
 	elm_toolbar_item_select(tb);
 
 	main_vm->view_list = eina_list_append(main_vm->view_list, tb);
 
 	main_vm->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_vm->icon, "images/user.png", NULL);
-	tb = elm_toolbar_item_add(main_vm->viewbar, main_vm->icon, "User view", view_main_user, win);
+	tb = elm_toolbar_item_add(main_vm->viewbar, main_vm->icon, "User view", view_main_user, NULL);
 
 	main_vm->view_list = eina_list_append(main_vm->view_list, tb);
 
@@ -611,27 +611,27 @@ create_main_vm(void)
 
 	main_vm->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_vm->icon, "images/screwdriver.png", NULL);
-	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Info", vm_info_cb, win);
+	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Info", vm_info_cb, NULL);
 	l = eina_list_append(l, tb);
 	
 	main_vm->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_vm->icon, "images/pause.png", NULL);
-	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Pause", vm_pause_cb, win);
+	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Pause", vm_pause_cb, NULL);
 	l = eina_list_append(l, tb);
 	
 	main_vm->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_vm->icon, "images/shutdown.png", NULL);
-	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Shutdown", vm_shutdown_cb, win);
+	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Shutdown", vm_shutdown_cb, NULL);
 	l = eina_list_append(l, tb);
 	
 	main_vm->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_vm->icon, "images/reboot.png", NULL);
-	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Reboot", vm_reboot_cb, win);
+	tb = elm_toolbar_item_add(main_vm->bar, main_vm->icon, "Reboot", vm_reboot_cb, NULL);
 	l = eina_list_append(l, tb);
 
 	main_vm->tb_list = l;
 	main_vm->list = elm_genlist_add(win->win);
-	evas_object_smart_callback_add(main_vm->list, "clicked", vm_info_cb, win);
+	evas_object_smart_callback_add(main_vm->list, "clicked", vm_info_cb, NULL);
 	WEIGHT(main_vm->list, 1, 1);
 	ALIGN(main_vm->list, -1, -1);
 	elm_box_pack_end(main_vm->box2, main_vm->list);
@@ -662,22 +662,22 @@ create_main_user(void)
 
 	main_user->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_user->icon, "images/add_user.png", NULL);
-	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Add", NULL, win);
+	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Add", NULL, NULL);
 	l = eina_list_append(l, tb);
 
 	main_user->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_user->icon, "images/edit_user.png", NULL);
-	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Edit", user_info_cb, win);
+	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Edit", user_info_cb, NULL);
 	l = eina_list_append(l, tb);
 	
 	main_user->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_user->icon, "images/delete_user.png", NULL);
-	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Remove", user_remove_cb, win);
+	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Remove", user_remove_cb, NULL);
 	l = eina_list_append(l, tb);
 
 	main_user->tb_list = l;
 	main_user->list = elm_genlist_add(win->win);
-	evas_object_smart_callback_add(main_user->list, "clicked", user_info_cb, win);
+	evas_object_smart_callback_add(main_user->list, "clicked", user_info_cb, NULL);
 	WEIGHT(main_user->list, 1, 1);
 	ALIGN(main_user->list, -1, -1);
 	elm_box_pack_end(main_user->box2, main_user->list);

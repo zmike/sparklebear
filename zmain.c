@@ -144,7 +144,6 @@ zmain_getusers(const char *reply, void *data)
 	int ufound;
 
 	if (!(meta = data)) return;
-	if (!(win = meta->cbd)) return;
 	if (!(users = meta->extra)) return;
 
 	if (win->view != win->main_user->view) return;
@@ -256,7 +255,7 @@ zmain_getusers(const char *reply, void *data)
 int
 zmain_job_getusers(void *data)
 {
-	if (!meta_getUsersFull(zcon, &zmain_getusers, win))
+	if (!meta_getUsersFull(zcon, &zmain_getusers, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection failed, retrying");
 	else
 		elm_label_label_set(win->main_vm->status, "Adding job to refresh user info...");
@@ -356,16 +355,16 @@ zmain_vm_keybind(void *data, Evas_Event_Key_Down *key)
 	else if (!strcmp(key->keyname, "Return") || !strcmp(key->keyname, "KP_Enter"))
 	{
 		if (win->view == win->main_vm->view)
-			vm_info_cb(win, NULL, NULL);
+			vm_info_cb(NULL, NULL, NULL);
 		else if (win->view == win->main_user->view)
-			user_info_cb(win, NULL, NULL);
+			user_info_cb(NULL, NULL, NULL);
 	}
 }
 
 int
 zmain_job_getvms(void *data)
 {
-	if (!zrpc_VM_getAllFull(zcon, &zmain_getvms, win))
+	if (!zrpc_VM_getAllFull(zcon, &zmain_getvms, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection failed, retrying");
 	else
 		elm_label_label_set(win->main_vm->status, "Adding job to refresh vm info...");
