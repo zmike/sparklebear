@@ -30,9 +30,9 @@ typedef struct _zrpc_con
 	Ecore_Event_Handler *del;
 	Ecore_Event_Handler *data;
 
-	char *host;
-	char *rpc_path;
-	char *host_header;
+	const char *host;
+	const char *rpc_path;
+	const char *host_header;
 	int port;
 
 	/*use list for params to keep functions uniform*/

@@ -451,10 +451,9 @@ xml_parse_vmsfull(xmlNode *node)
 //	void *t = NULL;
 	zrpc_vm *vm;
 	Eina_List *tmp = NULL;
-        double time;
-
 
 #ifdef DEBUG
+        double time;
         time = ecore_time_get();
 #endif
 //	if (!(t = eina_list_data_get(vms))) vms = NULL;
