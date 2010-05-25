@@ -257,7 +257,7 @@ printf("DEBUG: setting user to %s state\n", (x) ? "active" : "inactive");
 int
 zinfo_job_updatevm(void *data)
 {
-	if (!zrpc_VM_get(win->info->vmuuid, zcon, &zinfo_updatevm, NULL))
+	if (!zrpc_VM_getVM(win->info->vmuuid, zcon, &zinfo_updatevm, NULL))
 	{
 		elm_label_label_set(win->main_vm->status, "Connection failed");
 		evas_object_show(win->main_vm->notify);

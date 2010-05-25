@@ -63,7 +63,7 @@ user_remove_cb(void *data, Evas_Object *obj, void *event_info)
 	/*FIXME: error checking?*/
 
 		
-	if (!zrpc_User_remove(uid, zcon, user_action_cb, NULL))
+	if (!zrpc_User_removeUser(uid, zcon, user_action_cb, NULL))
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
@@ -140,9 +140,9 @@ user_apply_cb(void *data, Evas_Object *obj, void *event_info)
 	user->email = eina_stringshare_add(email);
 	user->language = eina_stringshare_add("en_US");
 	if (win->view == win->info->useradd)
-		active = zrpc_User_add(user, zcon, user_action_cb, NULL);
+		active = zrpc_User_addUser(user, zcon, user_action_cb, NULL);
 	else
-		active = zrpc_User_modify(win->info->uid, user, zcon, user_action_cb, NULL);
+		active = zrpc_User_modifyUser(win->info->uid, user, zcon, user_action_cb, NULL);
 	if (!active)
 		elm_label_label_set(win->main_vm->status, "Connection to zrpc failed!");
 	else

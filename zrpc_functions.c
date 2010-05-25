@@ -160,7 +160,7 @@ int zrpc_VM_enableStateHandling(const char *uuid, zrpc_con *zcon, zrpc_network_c
 
 	return 1;
 }
-int zrpc_VM_exists(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_VM_isVm(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -169,14 +169,14 @@ int zrpc_VM_exists(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *c
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("VM.exists");
+	call = eina_stringshare_add("VM.isVm");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_VM_isVMIgnored(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_VM_isVmIgnored(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -185,14 +185,14 @@ int zrpc_VM_isVMIgnored(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, vo
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("VM.isVMIgnored");
+	call = eina_stringshare_add("VM.isVmIgnored");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_VM_get(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_VM_getVM(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -201,23 +201,7 @@ int zrpc_VM_get(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("VM.get");
-
-	if (!zrpc_meta(call, l, zcon, cb, cbd))
-		return 0;
-
-	return 1;
-}
-int zrpc_VM_getUpdatables(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
-{
-	Eina_List *l = NULL;
-	const char *call;
-
-	if ((!zcon) || (!uuid))
-		return 0;
-
-	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("VM.getUpdatables");
+	call = eina_stringshare_add("VM.getVM");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -248,21 +232,6 @@ int zrpc_VM_getAllFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 		return 0;
 
 	call = eina_stringshare_add("VM.getAllFull");
-
-	if (!zrpc_meta(call, l, zcon, cb, cbd))
-		return 0;
-
-	return 1;
-}
-int zrpc_VM_getAllUpdatables(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
-{
-	Eina_List *l = NULL;
-	const char *call;
-
-	if ((!zcon))
-		return 0;
-
-	call = eina_stringshare_add("VM.getAllUpdatables");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -1875,7 +1844,7 @@ int zrpc_Node_getAll(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 
 	return 1;
 }
-int zrpc_Node_getEnabled(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Node_getEnabledNodes(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -1883,14 +1852,14 @@ int zrpc_Node_getEnabled(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 	if ((!zcon))
 		return 0;
 
-	call = eina_stringshare_add("Node.getEnabled");
+	call = eina_stringshare_add("Node.getEnabledNodes");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_Node_getDisabled(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Node_getDisabledNodes(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -1898,14 +1867,14 @@ int zrpc_Node_getDisabled(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 	if ((!zcon))
 		return 0;
 
-	call = eina_stringshare_add("Node.getDisabled");
+	call = eina_stringshare_add("Node.getDisabledNodes");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_Node_getUnconfigured(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Node_getUnconfiguredNodes(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -1913,7 +1882,7 @@ int zrpc_Node_getUnconfigured(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 	if ((!zcon))
 		return 0;
 
-	call = eina_stringshare_add("Node.getUnconfigured");
+	call = eina_stringshare_add("Node.getUnconfiguredNodes");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -1968,7 +1937,7 @@ int zrpc_Node_getAddress(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, v
 
 	return 1;
 }
-int zrpc_Node_getLoadavg(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Node_getNodeLoadavg(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -1977,7 +1946,7 @@ int zrpc_Node_getLoadavg(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, v
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("Node.getLoadavg");
+	call = eina_stringshare_add("Node.getNodeLoadavg");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -2102,7 +2071,7 @@ int zrpc_Node_isEnabled(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, vo
 
 	return 1;
 }
-int zrpc_Node_enable(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Node_enableNode(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2111,14 +2080,14 @@ int zrpc_Node_enable(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void 
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("Node.enable");
+	call = eina_stringshare_add("Node.enableNode");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_Node_disable(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Node_disableNode(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2127,14 +2096,14 @@ int zrpc_Node_disable(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("Node.disable");
+	call = eina_stringshare_add("Node.disableNode");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_Node_remove(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Node_removeNode(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2143,7 +2112,7 @@ int zrpc_Node_remove(const char *uuid, zrpc_con *zcon, zrpc_network_cb cb, void 
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(uuid));
-	call = eina_stringshare_add("Node.remove");
+	call = eina_stringshare_add("Node.removeNode");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -2201,7 +2170,7 @@ int zrpc_Node_maintenanceMode(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 
 	return 1;
 }
-int zrpc_User_exists(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_isUser(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2210,7 +2179,7 @@ int zrpc_User_exists(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void 
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(name));
-	call = eina_stringshare_add("User.exists");
+	call = eina_stringshare_add("User.isUser");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -2249,7 +2218,7 @@ int zrpc_User_generatePassword(int uid, zrpc_con *zcon, zrpc_network_cb cb, void
 
 	return 1;
 }
-int zrpc_User_getName(int uid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_getUsername(int uid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2258,7 +2227,7 @@ int zrpc_User_getName(int uid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 		return 0;
 
 	l = eina_list_append(l, (void*)&uid);
-	call = eina_stringshare_add("User.getName");
+	call = eina_stringshare_add("User.getUsername");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -2343,7 +2312,7 @@ int zrpc_User_get(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 
 	return 1;
 }
-int zrpc_User_getByName(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_getUserByName(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2352,7 +2321,7 @@ int zrpc_User_getByName(const char *name, zrpc_con *zcon, zrpc_network_cb cb, vo
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(name));
-	call = eina_stringshare_add("User.getByName");
+	call = eina_stringshare_add("User.getUserByName");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -2391,7 +2360,7 @@ int zrpc_User_getByUID(int uid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 
 	return 1;
 }
-int zrpc_User_add(zrpc_user *new, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_addUser(zrpc_user *new, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2400,14 +2369,14 @@ int zrpc_User_add(zrpc_user *new, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 		return 0;
 
 	l = eina_list_append(l, new);
-	call = eina_stringshare_add("User.add");
+	call = eina_stringshare_add("User.addUser");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_setMyPassword(const char *oldpassword, const char *password, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_setPassword(const char *oldpassword, const char *password, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2417,7 +2386,7 @@ int zrpc_User_setMyPassword(const char *oldpassword, const char *password, zrpc_
 
 	l = eina_list_append(l, eina_stringshare_add(oldpassword));
 	l = eina_list_append(l, eina_stringshare_add(password));
-	call = eina_stringshare_add("User.setMyPassword");
+	call = eina_stringshare_add("User.setPassword");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
@@ -2441,7 +2410,7 @@ int zrpc_User_setPasswordByUID(int uid, const char *password, zrpc_con *zcon, zr
 
 	return 1;
 }
-int zrpc_User_remove(int uid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_removeUser(int uid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2450,14 +2419,14 @@ int zrpc_User_remove(int uid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 		return 0;
 
 	l = eina_list_append(l, (void*)&uid);
-	call = eina_stringshare_add("User.remove");
+	call = eina_stringshare_add("User.removeUser");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_modify(int uid, zrpc_user *u, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_modifyUser(int uid, zrpc_user *u, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2467,14 +2436,14 @@ int zrpc_User_modify(int uid, zrpc_user *u, zrpc_con *zcon, zrpc_network_cb cb, 
 
 	l = eina_list_append(l, (void*)&uid);
 	l = eina_list_append(l, u);
-	call = eina_stringshare_add("User.modify");
+	call = eina_stringshare_add("User.modifyUser");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_existsGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_isUserGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2483,14 +2452,14 @@ int zrpc_User_existsGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd
 		return 0;
 
 	l = eina_list_append(l, (void*)&gid);
-	call = eina_stringshare_add("User.existsGroup");
+	call = eina_stringshare_add("User.isUserGroup");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_existsGroupByName(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_isUserGroupByName(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2499,14 +2468,14 @@ int zrpc_User_existsGroupByName(const char *name, zrpc_con *zcon, zrpc_network_c
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(name));
-	call = eina_stringshare_add("User.existsGroupByName");
+	call = eina_stringshare_add("User.isUserGroupByName");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_removeGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_removeUserGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2515,14 +2484,14 @@ int zrpc_User_removeGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd
 		return 0;
 
 	l = eina_list_append(l, (void*)&gid);
-	call = eina_stringshare_add("User.removeGroup");
+	call = eina_stringshare_add("User.removeUserGroup");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_getGroupsByUID(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_getUserGroupsByUID(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2530,14 +2499,14 @@ int zrpc_User_getGroupsByUID(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 	if ((!zcon))
 		return 0;
 
-	call = eina_stringshare_add("User.getGroupsByUID");
+	call = eina_stringshare_add("User.getUserGroupsByUID");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_getGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_getUserGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2546,14 +2515,14 @@ int zrpc_User_getGroup(int gid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 		return 0;
 
 	l = eina_list_append(l, (void*)&gid);
-	call = eina_stringshare_add("User.getGroup");
+	call = eina_stringshare_add("User.getUserGroup");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_getGroups(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_getUserGroups(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2561,14 +2530,14 @@ int zrpc_User_getGroups(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 	if ((!zcon))
 		return 0;
 
-	call = eina_stringshare_add("User.getGroups");
+	call = eina_stringshare_add("User.getUserGroups");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_getGroupsFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_getUserGroupsFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2576,14 +2545,14 @@ int zrpc_User_getGroupsFull(zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 	if ((!zcon))
 		return 0;
 
-	call = eina_stringshare_add("User.getGroupsFull");
+	call = eina_stringshare_add("User.getUserGroupsFull");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_getGroupMembers(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_getUserGroupMembers(const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2592,14 +2561,14 @@ int zrpc_User_getGroupMembers(const char *name, zrpc_con *zcon, zrpc_network_cb 
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(name));
-	call = eina_stringshare_add("User.getGroupMembers");
+	call = eina_stringshare_add("User.getUserGroupMembers");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_addToGroup(int uid, const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_addToUserGroup(int uid, const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2609,14 +2578,14 @@ int zrpc_User_addToGroup(int uid, const char *name, zrpc_con *zcon, zrpc_network
 
 	l = eina_list_append(l, (void*)&uid);
 	l = eina_list_append(l, eina_stringshare_add(name));
-	call = eina_stringshare_add("User.addToGroup");
+	call = eina_stringshare_add("User.addToUserGroup");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_removeFromGroup(int uid, const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_removeFromUserGroup(int uid, const char *name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2626,14 +2595,14 @@ int zrpc_User_removeFromGroup(int uid, const char *name, zrpc_con *zcon, zrpc_ne
 
 	l = eina_list_append(l, (void*)&uid);
 	l = eina_list_append(l, eina_stringshare_add(name));
-	call = eina_stringshare_add("User.removeFromGroup");
+	call = eina_stringshare_add("User.removeFromUserGroup");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_User_renameGroup(const char *old_name, const char *new_name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_User_renameUserGroup(const char *old_name, const char *new_name, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2643,14 +2612,14 @@ int zrpc_User_renameGroup(const char *old_name, const char *new_name, zrpc_con *
 
 	l = eina_list_append(l, eina_stringshare_add(old_name));
 	l = eina_list_append(l, eina_stringshare_add(new_name));
-	call = eina_stringshare_add("User.renameGroup");
+	call = eina_stringshare_add("User.renameUserGroup");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
 
 	return 1;
 }
-int zrpc_Session_check(const char *sessid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
+int zrpc_Session_checkSession(const char *sessid, zrpc_con *zcon, zrpc_network_cb cb, void *cbd)
 {
 	Eina_List *l = NULL;
 	const char *call;
@@ -2659,7 +2628,7 @@ int zrpc_Session_check(const char *sessid, zrpc_con *zcon, zrpc_network_cb cb, v
 		return 0;
 
 	l = eina_list_append(l, eina_stringshare_add(sessid));
-	call = eina_stringshare_add("Session.check");
+	call = eina_stringshare_add("Session.checkSession");
 
 	if (!zrpc_meta(call, l, zcon, cb, cbd))
 		return 0;
