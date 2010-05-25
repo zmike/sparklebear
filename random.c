@@ -10,11 +10,12 @@ key_press(void *data, Evas *a, Evas_Object *obj, void *event_info)
 	printf("You pressed: %s\n", key->keyname);
 #endif
 	if (win->view == win->login->view)
-		zlogin_keybind(win, key);
+		zlogin_keybind(NULL, key);
 	else if ((win->view == win->main_vm->view) || (win->view == win->main_user->view))
-		zmain_vm_keybind(win, key);
-	else if ((win->view == win->info->vmview) || (win->view == win->info->vmhover) || (win->view == win->info->userview))
-		zinfo_keybind(win, key);	
+		zmain_vm_keybind(NULL, key);
+	else if ((win->view == win->info->vmview) || (win->view == win->info->vmhover)
+		|| (win->view == win->info->useredit) || (win->view == win->info->useradd))
+		zinfo_keybind(NULL, key);	
 }
 
 vmitem *

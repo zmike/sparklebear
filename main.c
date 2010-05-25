@@ -51,7 +51,8 @@ elm_main(int argc, char **argv)
 	login->view = eina_stringshare_add("login");
 	info->vmview = eina_stringshare_add("info_vm");
 	info->vmhover = eina_stringshare_add("info_vm_hover");
-	info->userview = eina_stringshare_add("info_user");
+	info->useredit = eina_stringshare_add("info_useredit");
+	info->useradd = eina_stringshare_add("info_useradd");
 	main_vm->view = eina_stringshare_add("main_vm");
 	main_user->view = eina_stringshare_add("main_user");
 

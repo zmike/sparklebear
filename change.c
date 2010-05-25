@@ -146,11 +146,11 @@ change_zinfo_to_zmain(void *data, Evas_Object *obj, void *event_info)
 	x = evas_object_key_grab(win->win, "Right", 0, 0, 1);
 	x = evas_object_key_grab(win->win, "Home", 0, 0, 1);
 	x = evas_object_key_grab(win->win, "End", 0, 0, 1);
-	ecore_timer_del(win->timerget);
 	if (data == win->main_user->view)
 		return;
 	create_main_vm();
 
+	ecore_timer_del(win->timerget);
 	win->timerget = ecore_timer_add(win->vmtimer, zmain_job_getvms, NULL);
 	ecore_job_add((void*)zmain_job_getvms, NULL);
 	elm_flip_content_front_set(win->main_vm->fl, win->main_vm->box2);

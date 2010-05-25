@@ -11,7 +11,6 @@ create_info_vm(void)
 	evas_object_show(win->info->frame);
 
 	win->info->hbox = elm_box_add(win->win);
-//	elm_box_homogenous_set(win->info->hbox, 1);
 	elm_box_horizontal_set(win->info->hbox, 1);
 	WEIGHT(win->info->hbox, 1, 1);
 	ALIGN(win->info->hbox, -1, -1);
@@ -258,7 +257,7 @@ create_info_user(void)
 	elm_toggle_label_set(win->info->state_label, "Active");
 	elm_toggle_states_labels_set(win->info->state_label, "Yes", "No");
 	elm_object_scale_set(win->info->state_label, 1.7);
-	evas_object_smart_callback_add(win->info->state_label, "changed", zinfo_job_updateuser_state, NULL);
+	evas_object_smart_callback_add(win->info->state_label, "changed", zinfo_updateuser_state, NULL);
 	elm_box_pack_end(win->info->vbox2, win->info->state_label);
 	evas_object_show(win->info->state_label);
 
@@ -353,7 +352,7 @@ create_info_user(void)
 	elm_slider_min_max_set(win->info->level, USER_LEVEL_MIN, USER_LEVEL_MAX);
 	elm_slider_indicator_format_set(win->info->level, "%1.0f");
 	elm_object_scale_set(win->info->level, 3);
-	evas_object_smart_callback_add(win->info->level, "changed", zinfo_job_updateuser_level, NULL);
+	evas_object_smart_callback_add(win->info->level, "changed", zinfo_updateuser_level, NULL);
 	elm_box_pack_end(win->info->vbox2, win->info->level);
 	evas_object_show(win->info->level);
 
@@ -375,7 +374,7 @@ create_info_user(void)
 	elm_button_icon_set(win->info->hb, win->info->ic);
 	elm_button_label_set(win->info->hb, "Refresh");
 	elm_object_style_set(win->info->hb, "anchor");
-	evas_object_smart_callback_add(win->info->hb, "clicked", zinfo_job_updateuser, NULL);
+	evas_object_smart_callback_add(win->info->hb, "clicked", zinfo_updateuser, NULL);
 	elm_box_pack_end(win->info->hbox, win->info->hb);
 	evas_object_show(win->info->hb);
 
@@ -399,7 +398,7 @@ create_info_user(void)
 	elm_button_icon_set(win->info->hb, win->info->ic);
 	elm_button_label_set(win->info->hb, "Apply");
 	elm_object_style_set(win->info->hb, "anchor");
-	evas_object_smart_callback_add(win->info->hb, "clicked", user_edit_cb, NULL);
+	evas_object_smart_callback_add(win->info->hb, "clicked", user_apply_cb, NULL);
 	elm_box_pack_end(win->info->hbox, win->info->hb);
 	evas_object_show(win->info->hb);
 
@@ -662,7 +661,7 @@ create_main_user(void)
 
 	main_user->icon = elm_icon_add(win->win);
 	elm_icon_file_set(main_user->icon, "images/add_user.png", NULL);
-	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Add", NULL, NULL);
+	tb = elm_toolbar_item_add(main_user->bar, main_user->icon, "Add", user_add_cb, NULL);
 	l = eina_list_append(l, tb);
 
 	main_user->icon = elm_icon_add(win->win);

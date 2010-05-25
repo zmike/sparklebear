@@ -146,7 +146,9 @@ zmain_getusers(const char *reply, void *data)
 	if (!(meta = data)) return;
 	if (!(users = meta->extra)) return;
 
-	if (win->view != win->main_user->view) return;
+	if ((win->view != win->main_user->view) && (win->view != win->info->useredit)
+						&& (win->view != win->info->useradd))
+		return;
 	elist = win->elist;
 	win->list = users;
 
@@ -281,7 +283,7 @@ zmain_vm_keybind(void *data, Evas_Event_Key_Down *key)
 
 	if (!strcmp(key->keyname, "Escape"))
 	{
-		change_zmain_to_zlogin(win, NULL, NULL);
+		change_zmain_to_zlogin(NULL, NULL, NULL);
 		return;
 	}
 	else if (!strcmp(key->keyname, "Left"))

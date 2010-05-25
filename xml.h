@@ -17,5 +17,7 @@ void		xml_new_call(xmlDocPtr doc, const char *method);
 void		xml_new_string(xmlDocPtr doc, const char *string);
 void		xml_new_int(xmlDocPtr doc, int i, int array);
 void		xml_new_array(xmlDocPtr doc);
+void		xml_new_user(xmlDocPtr doc, zrpc_user *user);
+void		xml_new_moduser(xmlDocPtr doc, Eina_List *uid);
 
 #endif

@@ -204,7 +204,7 @@ zinfo_vm_state_change(void *data, Evas_Object *obj, void *event_info)
 	evas_object_show(info->hover);	
 }
 void
-zinfo_job_updateuser_level(void *data, Evas_Object *obj, void *event_info)
+zinfo_updateuser_level(void *data, Evas_Object *obj, void *event_info)
 {
 	const char *tmp;
 	char buf[128];
@@ -232,7 +232,7 @@ printf("DEBUG: setting level to %s\n", tmp);
 
 
 void
-zinfo_job_updateuser_state(void *data, Evas_Object *obj, void *event_info)
+zinfo_updateuser_state(void *data, Evas_Object *obj, void *event_info)
 {
 	Eina_Bool x;
 
@@ -257,7 +257,7 @@ printf("DEBUG: setting user to %s state\n", (x) ? "active" : "inactive");
 int
 zinfo_job_updatevm(void *data)
 {
-	if (!zrpc_VM_getVM(win->info->vmuuid, zcon, &zinfo_updatevm, NULL))
+	if (!zrpc_VM_get(win->info->vmuuid, zcon, &zinfo_updatevm, NULL))
 	{
 		elm_label_label_set(win->main_vm->status, "Connection failed");
 		evas_object_show(win->main_vm->notify);
@@ -267,15 +267,23 @@ zinfo_job_updatevm(void *data)
 }
 
 zrpc_user*
-zinfo_user_findbyuid(void *data)
+zinfo_user_findbyuid(int id)
 {
 	Eina_List *l;
 	zrpc_user *user;
-	
+	int uid;
+
+	if (id >= 0)
+		uid = id;
+	else
+		uid = win->info->uid;
 
 	EINA_LIST_FOREACH(win->list, l, user)
-		if (user->uid == win->info->uid)
+		if (user->uid == uid)
+		{
+			win->info->newuid = -1;
 			return user;
+		}
 		
 	EINA_LIST_FOREACH(win->list, l, user)
 		if (user->uid == win->info->newuid)
@@ -289,7 +297,7 @@ zinfo_user_findbyuid(void *data)
 }
 
 void
-zinfo_job_updateuser(void *data, Evas_Object *obj, void *event_info)
+zinfo_updateuser(void *data, Evas_Object *obj, void *event_info)
 {
 	zrpc_user *user;
 	zinfo *info = win->info;
@@ -297,11 +305,11 @@ zinfo_job_updateuser(void *data, Evas_Object *obj, void *event_info)
 	char buf[128];
 
 
-	if (!(user = zinfo_user_findbyuid(win)))
+	if (!(user = zinfo_user_findbyuid(-1)))
 	{
 		elm_label_label_set(win->main_vm->status, "Invalid UID!");
 		evas_object_show(win->main_vm->notify);
-		zinfo_destroy_hover(win, NULL, NULL);
+		zinfo_destroy_hover(NULL, NULL, NULL);
 		return;
 	}
 
@@ -353,7 +361,7 @@ zinfo_destroy_hover(void *data, Evas_Object *obj, void *event_info)
 
 	if (win->view == info->vmhover)
 		win->view = info->vmview;
-	else if (win->view == info->userview)
+	else if ((win->view == info->useradd) || (win->view == info->useredit))
 	{
 		evas_object_hide(info->lb);
 		evas_object_del(info->lb);
@@ -375,9 +383,9 @@ zinfo_keybind(void *data, Evas_Event_Key_Down *key)
 {
 	if (win->view == win->info->vmview)
 		if (!strcmp(key->keyname, "Escape"))
-			change_zinfo_to_zmain(win, NULL, NULL);
-	if ((win->view == win->info->vmhover) || (win->view == win->info->userview))
+			change_zinfo_to_zmain(NULL, NULL, NULL);
+	if ((win->view == win->info->vmhover) || (win->view == win->info->useradd) || (win->view == win->info->useredit))
 		if (!strcmp(key->keyname, "Escape"))
-			zinfo_destroy_hover(win, NULL, NULL);
+			zinfo_destroy_hover(NULL, NULL, NULL);
 
 }

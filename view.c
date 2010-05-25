@@ -15,9 +15,9 @@ view_main_vm(void *data, Evas_Object *obj, void *event_info)
 		elm_flip_content_front_set(win->main_vm->fl, win->main_vm->box2);
 	elm_label_label_set(win->main_vm->status, "Fetching vms...");
 	evas_object_show(win->main_vm->notify);
-	ecore_timer_del(win->timerget);
 
 	elm_flip_go(win->main_vm->fl, ELM_FLIP_ROTATE_Y_CENTER_AXIS);
+	ecore_timer_del(win->timerget);
 	if (win->view == win->main_user->view)
 	{
 		evas_object_del(win->main_user->box2);
@@ -27,7 +27,6 @@ view_main_vm(void *data, Evas_Object *obj, void *event_info)
 		eina_list_free(win->list);
 		win->list = NULL;
 		eina_list_free(win->main_user->tb_list);
-		
 	}
 	else if (win->view == win->info->vmview)
 		evas_object_del(win->info->hbox);
@@ -54,9 +53,9 @@ view_main_user(void *data, Evas_Object *obj, void *event_info)
 		elm_flip_content_front_set(win->main_vm->fl, win->main_user->box2);
 	elm_label_label_set(win->main_vm->status, "Fetching users...");
 	evas_object_show(win->main_vm->notify);
-	ecore_timer_del(win->timerget);
 
 	elm_flip_go(win->main_vm->fl, ELM_FLIP_ROTATE_Y_CENTER_AXIS);
+	ecore_timer_del(win->timerget);
 	if (win->view == win->main_vm->view)
 	{
 		evas_object_del(win->main_vm->box2);
@@ -70,7 +69,7 @@ view_main_user(void *data, Evas_Object *obj, void *event_info)
 	else if (win->view == win->info->vmview)
 		evas_object_del(win->info->frame);
 
-	zmain_job_getusers(win);
+	zmain_job_getusers(NULL);
 	win->timerget = ecore_timer_add(win->usertimer, zmain_job_getusers, NULL);
 	win->view = win->main_user->view;
 }

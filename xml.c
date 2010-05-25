@@ -603,3 +603,64 @@ xml_new_array(xmlDocPtr doc)
 			break;
 		}
 }
+
+void
+xml_new_user(xmlDocPtr doc, zrpc_user *user)
+{
+	xmlNodePtr node, node2, p, v, i, s, n, m;
+	char i2[13];
+
+	node = xmlDocGetRootElement(doc); //methodCall
+    	for (node2 = node; node2; node2 = node2->children->next)
+		if (!strcmp((char*)node2->name, "params"))
+		{
+			p = xmlNewChild(node2, NULL, BAD_CAST "param", NULL);
+			v = xmlNewChild(p, NULL, BAD_CAST "value", NULL);
+			s = xmlNewChild(v, NULL, BAD_CAST "struct", NULL);
+			
+			m = xmlNewChild(s, NULL, BAD_CAST "member", NULL);
+			n = xmlNewChild(m, NULL, BAD_CAST "name", BAD_CAST "uid");
+			v = xmlNewChild(m, NULL, BAD_CAST "value", NULL);
+			eina_convert_itoa(user->uid, i2);
+			i = xmlNewChild(v, NULL, BAD_CAST "int", BAD_CAST i2);
+
+			m = xmlNewChild(s, NULL, BAD_CAST "member", NULL);
+			n = xmlNewChild(m, NULL, BAD_CAST "name", BAD_CAST "name");
+			v = xmlNewChild(m, NULL, BAD_CAST "value", NULL);
+			i = xmlNewChild(v, NULL, BAD_CAST "string", BAD_CAST user->name);
+
+			m = xmlNewChild(s, NULL, BAD_CAST "member", NULL);
+			n = xmlNewChild(m, NULL, BAD_CAST "name", BAD_CAST "email");
+			v = xmlNewChild(m, NULL, BAD_CAST "value", NULL);
+			i = xmlNewChild(v, NULL, BAD_CAST "string", BAD_CAST user->email);
+
+			m = xmlNewChild(s, NULL, BAD_CAST "member", NULL);
+			n = xmlNewChild(m, NULL, BAD_CAST "name", BAD_CAST "active");
+			v = xmlNewChild(m, NULL, BAD_CAST "value", NULL);
+			eina_convert_itoa(user->active, i2);
+			i = xmlNewChild(v, NULL, BAD_CAST "int", BAD_CAST i2);
+
+			m = xmlNewChild(s, NULL, BAD_CAST "member", NULL);
+			n = xmlNewChild(m, NULL, BAD_CAST "name", BAD_CAST "type");
+			v = xmlNewChild(m, NULL, BAD_CAST "value", NULL);
+			eina_convert_itoa(user->type, i2);
+			i = xmlNewChild(v, NULL, BAD_CAST "int", BAD_CAST i2);
+
+			m = xmlNewChild(s, NULL, BAD_CAST "member", NULL);
+			n = xmlNewChild(m, NULL, BAD_CAST "name", BAD_CAST "language");
+			v = xmlNewChild(m, NULL, BAD_CAST "value", NULL);
+			i = xmlNewChild(v, NULL, BAD_CAST "string", BAD_CAST user->language);
+
+			break;
+		}
+}
+
+void
+xml_new_moduser(xmlDocPtr doc, Eina_List *uid)
+{
+	int id = *(int*)eina_list_data_get(uid);
+	zrpc_user *user = eina_list_data_get(uid->next);
+
+	xml_new_int(doc, id, 0);
+	xml_new_user(doc, user);
+}

@@ -71,7 +71,7 @@ typedef struct _zinfo
 			*notesframe, *notes, *notesend;
 	Ecore_Timer *update;
 	const char *vmuuid, *state;
-	const char *userview, *vmview, *vmhover;
+	const char *useradd, *useredit, *vmview, *vmhover;
 	int uid, newuid, ulevel;
 } zinfo;
 

@@ -23,9 +23,9 @@ zlogin_keybind(void *data, Evas_Event_Key_Down *key)
 	Evas_Object *f;
 
 	if (!strcmp(key->keyname, "Escape"))
-		exit_wrapper(win, NULL, NULL);
+		exit_wrapper(NULL, NULL, NULL);
 	else if (!strcmp(key->keyname, "Return") || !strcmp(key->keyname, "KP_Enter"))
-		zlogin_try(win, NULL, NULL);
+		zlogin_try(NULL, NULL, NULL);
 	else if (!strcmp(key->keyname, "Tab"))
 	{
 		if (!login->lp->next) login->lp = login->lp->prev;

@@ -124,7 +124,7 @@ vm_shutdown_cb(void *data, Evas_Object *obj, void *event_info)
 
 	evas_object_show(win->main_vm->notify);
 	if (win->view == win->info->vmhover)
-		zinfo_destroy_hover(win, NULL, NULL);
+		zinfo_destroy_hover(NULL, NULL, NULL);
 }
 
 
@@ -155,7 +155,7 @@ vm_reboot_cb(void *data, Evas_Object *obj, void *event_info)
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
 
 	evas_object_show(win->main_vm->notify);
-	if (win->view == win->info->vmhover) zinfo_destroy_hover(win, NULL, NULL);
+	if (win->view == win->info->vmhover) zinfo_destroy_hover(NULL, NULL, NULL);
 }
 
 void
@@ -185,7 +185,7 @@ vm_pause_cb(void *data, Evas_Object *obj, void *event_info)
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
 
 	evas_object_show(win->main_vm->notify);
-	if (win->view == win->info->vmhover) zinfo_destroy_hover(win, NULL, NULL);
+	if (win->view == win->info->vmhover) zinfo_destroy_hover(NULL, NULL, NULL);
 }
 
 void
@@ -215,7 +215,7 @@ vm_unpause_cb(void *data, Evas_Object *obj, void *event_info)
 		elm_label_label_set(win->main_vm->status, "Connection succeeded!");
 
 	evas_object_show(win->main_vm->notify);
-	if (win->view == win->info->vmhover) zinfo_destroy_hover(win, NULL, NULL);
+	if (win->view == win->info->vmhover) zinfo_destroy_hover(NULL, NULL, NULL);
 }
 
 void

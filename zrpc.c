@@ -264,7 +264,14 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 		EINA_LIST_FOREACH(zcon->params[z], l, s)
 		/* use eina list for params to have uniform functions */
 		{/*FIXME: add type checking for last couple calls*/
-			if (isalnum((*(char*)s))) /*dereference char* to char and check for non-garbage*/
+			if (!strcmp(zcon->call[z], "User.add"))
+				xml_new_user(doc, s);
+			else if (!strcmp(zcon->call[z], "User.modify"))
+			{
+				xml_new_moduser(doc, l);
+				break;
+			}
+			else if (isalnum((*(char*)s))) /*dereference char* to char and check for non-garbage*/
 				xml_new_string(doc, (char*)s); /*must be string*/
 			else /*otherwise int*/
 			{
@@ -317,11 +324,13 @@ int zrpc_meta(const char *call, Eina_List *params, zrpc_con *zcon, zrpc_network_
 
 	if (params)
 	{/*free params if there were any*/
-		EINA_LIST_FREE(params, s)
-			if (isalnum((*(char*)s)))
-			/*check for strings to free*/
-				eina_stringshare_del(s);
-
+		if ((!strcmp(zcon->call[z], "User.modify")) || !(!strcmp(zcon->call[z], "User.add")))
+			eina_list_free(params);
+		else
+			EINA_LIST_FREE(params, s)
+				if (isalnum((*(char*)s)))
+				/*check for strings to free*/
+					eina_stringshare_del(s);
 	}
 	/*null the list to prevent magic fail if we reuse it*/
 	zcon->params[z] = NULL;
